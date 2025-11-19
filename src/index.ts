@@ -12,14 +12,16 @@ try {
 } catch (_e) {}
 
 program.name('gh-reply').version(version);
+// --repo is optional; gh CLI can infer repository from CWD when run inside a git repo
+program.option('--repo <owner/name>', 'specify repository');
 
 program
   .command('list')
   .description('list open PRs')
-  .option('--repo <owner/name>', 'specify repository')
   .action(async (opts: any) => {
+    const repo = program.opts().repo;
     const cmd = await import('./commands/listCmd');
-    await cmd.default(opts.repo);
+    await cmd.default(repo);
   });
 
 program
@@ -27,10 +29,19 @@ program
   .description('show PR details')
   .option('--repo <owner/name>', 'specify repository')
   .action(async (prNumber: string, opts: any) => {
-    const { gh } = await import('./lib/gh');
-    const repo = opts.repo ? ['--repo', opts.repo] : [];
-    const out = await gh(['pr', 'view', prNumber, ...repo]);
-    console.log(out);
+    // Show PR details as JSON using gh --json
+    const repoOpt = program.opts().repo;
+    const { getRepoInfo, ghJson } = await import('./lib/gh');
+    let repo = repoOpt;
+    if (!repo) {
+      const r = await getRepoInfo();
+      repo = `${r.owner}/${r.name}`;
+    }
+    const args = ['pr', 'view', prNumber, '--json', 'title,body,author,headRefName,baseRefName,headRefOid,url'];
+    if (repo) args.push('--repo', repo);
+    const out = await ghJson(args);
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(out, null, 2));
   });
 
 const comment = program.command('comment').description('comment operations');

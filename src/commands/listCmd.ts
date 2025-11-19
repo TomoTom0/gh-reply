@@ -1,19 +1,21 @@
 import { gh } from '../lib/gh';
+import { program } from 'commander';
 
 export default async function listCmd(repoOverride?: string) {
   try {
-    const { ensureGhAvailable, getRepoInfo } = await import('../lib/gh');
+    const { ensureGhAvailable, ghJson } = await import('../lib/gh');
     await ensureGhAvailable();
-    if (repoOverride) {
-      // pass repo override
-      const out = await gh(['pr', 'list', '--state', 'open', '--repo', repoOverride]);
-      console.log(out);
-      return;
-    }
-    const out = await gh(['pr', 'list', '--state', 'open']);
-    console.log(out);
+    const repo = repoOverride || (program && program.opts && program.opts().repo) || program.opts().repo;
+    const args = ['pr', 'list', '--state', 'open', '--json', 'number,title,author,url'];
+    if (repo) args.push('--repo', repo);
+    const out = await ghJson(args);
+    // Ensure JSON output on stdout. All debug/info messages must go to stderr.
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(out, null, 2));
   } catch (errAny) {
     const e = errAny as Error;
+    // eslint-disable-next-line no-console
     console.error('Failed to run `gh pr list`: ', e.message || e);
+    process.exitCode = 2;
   }
 }
