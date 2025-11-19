@@ -1,0 +1,30 @@
+{
+  "name": "gh-reply",
+  "version": "0.1.0",
+  "description": "CLI to manage draft replies to GitHub PR review comments",
+  "bin": {
+    "gh-reply": "bin/gh-reply.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "dev": "node ./dist/index.js",
+    "link-local": "node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.0",
+    "commander": "^10.0.0",
+    "execa": "^7.1.1",
+    "fs-extra": "^11.1.1",
+    "zod": "^3.23.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.1",
+    "@types/node": "^20.5.1",
+    "typescript": "^5.5.6"
+  }
+}
