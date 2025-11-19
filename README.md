@@ -9,6 +9,33 @@ Quick start
 - Build: `npm run build`
 - Run locally (shim): `node node_modules/.bin/gh-reply list --repo owner/name`
 
+Installation
+------------
+
+Install and build locally:
+
+```
+npm run setup
+```
+
+This runs `npm install` and builds the TypeScript sources.
+
+Running the CLI
+---------------
+
+After building you can run the CLI with the local shim:
+
+```
+node node_modules/.bin/gh-reply --help
+```
+
+Or run the built JS directly:
+
+```
+npm run dev -- --help
+```
+
+
 Commands
 - `list [--repo owner/name]` - list open PRs
 - `show <prNumber> [--repo owner/name]` - show PR details
