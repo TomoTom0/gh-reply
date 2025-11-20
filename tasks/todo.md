@@ -9,3 +9,11 @@
 - Document contributor setup: `npm install`, `npm run build`, `gh auth login`.
 
 Note: JSON-first outputs and full comment/thread metadata have been implemented; adjust tests/docs accordingly.
+
+Remaining review items to address (from PR #1):
+
+- Update `README.md` to reflect ESM change and new usage with `node`/`bin` shim.
+- Remove or document any helper scripts in `scripts/` (decide whether they are part of the project or temporary).
+- Implement `draftClear` and related draft commands to ensure edge cases are handled (some threads indicated issues with clearing drafts).
+
+Plan: I will add tasks for these items and prioritize small, non-breaking fixes first (README, docs, safety around scripts). If you agree, I will update `tasks/` and create branches for each large task.
