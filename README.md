@@ -9,6 +9,20 @@ Prerequisites
 Note on ESM
 - This project has migrated to ECMAScript Modules (ESM). The built CLI is an ESM bundle in `dist/`. The `bin/gh-reply.js` shim dynamically imports the ESM bundle so you can run `node ./bin/gh-reply.js` after `npm run build`.
 
+Publishing
+-----------
+
+To publish to npm from a release tag, create a tag like `v0.1.0` and push it. The GitHub Actions `Release` workflow will publish the package to npm when a tag matching `v*.*.*` is pushed. Ensure you have added `NPM_TOKEN` to the repository secrets for publishing.
+
+Contributing
+------------
+
+1. Fork the repo and create a feature branch.
+2. Make changes and run `npm run build` and `npm run test`.
+3. Open a PR against `dev`.
+
+Development scripts (in `scripts/`) are for maintainers only. See `tools/README.scripts.md` for details.
+
 Quick start
 - Build: `npm run build`
 - Run locally (shim): `node node_modules/.bin/gh-reply list --repo owner/name`

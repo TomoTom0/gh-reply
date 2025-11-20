@@ -18,6 +18,16 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TomoTom0/gh-reply.git"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "src",
+    "README.md"
+  ],
   "dependencies": {
     "chalk": "^5.4.0",
     "commander": "^10.0.0",
