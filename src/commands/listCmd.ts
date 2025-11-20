@@ -5,7 +5,7 @@ export default async function listCmd(repoOverride?: string) {
   try {
     const { ensureGhAvailable, ghJson } = await import('../lib/gh');
     await ensureGhAvailable();
-    const repo = repoOverride || (program && program.opts && program.opts().repo) || program.opts().repo;
+    const repo = repoOverride || program.opts().repo;
     const args = ['pr', 'list', '--state', 'open', '--json', 'number,title,author,url'];
     if (repo) args.push('--repo', repo);
     const out = await ghJson(args);

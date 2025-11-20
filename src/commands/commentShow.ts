@@ -30,7 +30,7 @@ export default async function commentShow(prNumber: string, threadId: string) {
     const mapped = {
       threadId: thread.id,
       path: thread.path || null,
-      line: typeof lineVal === 'number' ? lineVal : (lineVal ? Number(lineVal) : null),
+      line: lineVal ? +lineVal : null,
       isResolved: !!thread.isResolved,
       comments: (thread.comments.nodes || []).map((c: any) => ({
         id: c.id || null,
