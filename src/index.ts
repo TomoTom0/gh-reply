@@ -63,6 +63,17 @@ comment
     await cmd.default(prNumber, threadId);
   });
 
+comment
+  .command('reply-all <prNumber>')
+  .description('reply to all review threads that you have not replied to')
+  .option('--message <msg>', 'message to post')
+  .option('--resolve', 'mark threads resolved after sending')
+  .option('--dry-run', 'do not actually post, just show what would be done')
+  .action(async (prNumber: string, opts: any) => {
+    const cmd = await import('./commands/commentReplyAll');
+    await cmd.default(prNumber, opts.message || 'Thanks — noted; PTAL', !!opts.resolve, !!opts.dryRun);
+  });
+
 const draft = program.command('draft').description('draft management');
 
 draft
