@@ -1,11 +1,11 @@
-import { getDraftsForPr, removeDraft } from '../lib/store';
-import { gh, ghGraphql, buildResolveMutation, buildAddCommentMutation, getRepoInfo, getPrDetails, getAuthenticatedUser } from '../lib/gh';
-import { expandMagicVars } from '../lib/vars';
+import { getDraftsForPr, removeDraft } from '../lib/store.js';
+import { gh, ghGraphql, buildResolveMutation, buildAddCommentMutation, getRepoInfo, getPrDetails, getAuthenticatedUser } from '../lib/gh.js';
+import { expandMagicVars } from '../lib/vars.js';
 
 export default async function draftSend(prNumber: string, force = false, dryRun = false) {
   const drafts = await getDraftsForPr(prNumber);
   const chalk = (await import('chalk')).default;
-  const { ensureGhAvailable } = await import('../lib/gh');
+  const { ensureGhAvailable } = await import('../lib/gh.js');
   await ensureGhAvailable();
   const repoOption = (await import('commander')).program.opts().repo;
   for (const [target, entry] of Object.entries(drafts)) {

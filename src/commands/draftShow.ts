@@ -1,4 +1,4 @@
-import { getDraftsForPr } from '../lib/store';
+import { getDraftsForPr } from '../lib/store.js';
 
 export default async function draftShow(prNumber: string) {
   const drafts = await getDraftsForPr(prNumber);

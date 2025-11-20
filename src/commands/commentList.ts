@@ -1,8 +1,9 @@
-import { getRepoInfo, ghGraphql } from '../lib/gh';
+import { getRepoInfo, ghGraphql } from '../lib/gh.js';
 import { program } from 'commander';
+import { mapThreadNode } from '../lib/mappers.js';
 
 export default async function commentList(prNumber: string, includeResolved = false) {
-  const { ensureGhAvailable } = await import('../lib/gh');
+  const { ensureGhAvailable } = await import('../lib/gh.js');
   await ensureGhAvailable();
   const repoOption = program.opts().repo;
   const repo = await getRepoInfo(repoOption);
@@ -45,31 +46,7 @@ export default async function commentList(prNumber: string, includeResolved = fa
   try {
     const nodes = out.data.repository.pullRequest.reviewThreads.nodes;
     const filtered = includeResolved ? nodes : nodes.filter((n: any) => !n.isResolved);
-    const mapped = filtered.map((node: any) => {
-      const firstComment = node.comments.nodes[0] || {};
-      const line = node.line || node.originalLine || node.startLine || null;
-      return {
-        threadId: node.id,
-        path: node.path || null,
-        line: line ? +line : null,
-        isResolved: !!node.isResolved,
-        comment: {
-          id: firstComment.id || null,
-          databaseId: firstComment.fullDatabaseId || null,
-          body: firstComment.body || '',
-          bodyText: firstComment.bodyText || null,
-          bodyHTML: firstComment.bodyHTML || null,
-          createdAt: firstComment.createdAt || null,
-          commit: firstComment.commit || null,
-          originalCommit: firstComment.originalCommit || null,
-          diffHunk: firstComment.diffHunk || null,
-          line: firstComment.line || firstComment.originalLine || null,
-          path: firstComment.path || null,
-          author: firstComment.author?.login || null,
-          url: firstComment.url || null,
-        },
-      };
-    });
+    const mapped = filtered.map((node: any) => mapThreadNode(node));
     // output JSON on stdout
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(mapped, null, 2));

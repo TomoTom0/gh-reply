@@ -1,8 +1,8 @@
-import { getRepoInfo, ghGraphql, getAuthenticatedUser } from '../lib/gh';
-import { addOrUpdateDraft } from '../lib/store';
+import { getRepoInfo, ghGraphql, getAuthenticatedUser } from '../lib/gh.js';
+import { addOrUpdateDraft } from '../lib/store.js';
 
 export default async function commentReplyAll(prNumber: string, message = 'Thanks — noted; PTAL', resolve = false, dryRun = false) {
-  const { ensureGhAvailable } = await import('../lib/gh');
+  const { ensureGhAvailable } = await import('../lib/gh.js');
   await ensureGhAvailable();
   const repo = await getRepoInfo();
   // fetch review threads
@@ -38,8 +38,7 @@ export default async function commentReplyAll(prNumber: string, message = 'Thank
 
   // send drafts
   if (!dryRun) {
-    const sendCmd = await import('./draftSend');
+    const sendCmd = await import('./draftSend.js');
     await sendCmd.default(prNumber, false, false);
   }
 }
-

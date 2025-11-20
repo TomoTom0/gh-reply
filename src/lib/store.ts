@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { DraftsSchema, Drafts, DraftEntry } from '../types';
+import { DraftsSchema, Drafts, DraftEntry } from '../types.js';
 
 const DRAFTS_PATH = path.join('.git', 'info', 'gh-reply-drafts.json');
 

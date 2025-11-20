@@ -20,7 +20,7 @@ program
   .description('list open PRs')
   .action(async (opts: any) => {
     const repo = program.opts().repo;
-    const cmd = await import('./commands/listCmd');
+    const cmd = await import('./commands/listCmd.js');
     await cmd.default(repo);
   });
 
@@ -31,7 +31,7 @@ program
   .action(async (prNumber: string, opts: any) => {
     // Show PR details as JSON using gh --json
     const repoOpt = program.opts().repo;
-    const { getRepoInfo, ghJson } = await import('./lib/gh');
+    const { getRepoInfo, ghJson } = await import('./lib/gh.js');
     let repo = repoOpt;
     if (!repo) {
       const r = await getRepoInfo();
@@ -51,7 +51,7 @@ comment
   .description('list review threads for a PR')
   .option('--all', 'include resolved threads')
   .action(async (prNumber: string, opts: any) => {
-    const cmd = await import('./commands/commentList');
+    const cmd = await import('./commands/commentList.js');
     await cmd.default(prNumber, !!opts.all);
   });
 
@@ -59,7 +59,7 @@ comment
   .command('show <prNumber> <threadId>')
   .description('show review thread details')
   .action(async (prNumber: string, threadId: string) => {
-    const cmd = await import('./commands/commentShow');
+    const cmd = await import('./commands/commentShow.js');
     await cmd.default(prNumber, threadId);
   });
 
@@ -70,7 +70,7 @@ comment
   .option('--resolve', 'mark threads resolved after sending')
   .option('--dry-run', 'do not actually post, just show what would be done')
   .action(async (prNumber: string, opts: any) => {
-    const cmd = await import('./commands/commentReplyAll');
+    const cmd = await import('./commands/commentReplyAll.js');
     await cmd.default(prNumber, opts.message || 'Thanks — noted; PTAL', !!opts.resolve, !!opts.dryRun);
   });
 
@@ -81,7 +81,7 @@ draft
   .option('-r, --resolve', 'mark to resolve after sending')
   .description('add draft reply')
   .action(async (prNumber: string, targetId: string, body: string, opts: any) => {
-    const cmd = await import('./commands/draftAdd');
+    const cmd = await import('./commands/draftAdd.js');
     await cmd.default(prNumber, targetId, body, !!opts.resolve);
   });
 
@@ -89,7 +89,7 @@ draft
   .command('show <prNumber>')
   .description('show drafts for PR')
   .action(async (prNumber: string) => {
-    const cmd = await import('./commands/draftShow');
+    const cmd = await import('./commands/draftShow.js');
     await cmd.default(prNumber);
   });
 
@@ -99,7 +99,7 @@ draft
   .description('send drafts for PR')
   .option('--dry-run', 'show actions without making changes')
   .action(async (prNumber: string, opts: any) => {
-    const cmd = await import('./commands/draftSend');
+    const cmd = await import('./commands/draftSend.js');
     await cmd.default(prNumber, !!opts.force, !!opts.dryRun);
   });
 
@@ -107,7 +107,7 @@ draft
   .command('clear <prNumber>')
   .description('clear drafts for PR')
   .action(async (prNumber: string) => {
-    const cmd = await import('./commands/draftClear');
+    const cmd = await import('./commands/draftClear.js');
     await cmd.default(prNumber);
   });
 
