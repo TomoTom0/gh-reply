@@ -49,9 +49,10 @@ const comment = program.command('comment').description('comment operations');
 comment
   .command('list <prNumber>')
   .description('list review threads for a PR')
-  .action(async (prNumber: string) => {
+  .option('--all', 'include resolved threads')
+  .action(async (prNumber: string, opts: any) => {
     const cmd = await import('./commands/commentList');
-    await cmd.default(prNumber);
+    await cmd.default(prNumber, !!opts.all);
   });
 
 comment

@@ -37,14 +37,13 @@ npm run dev -- --help
 
 
 Commands
-- `list [--repo owner/name]` - list open PRs
-- `show <prNumber> [--repo owner/name]` - show PR details
-- `comment list <prNumber>` - list unresolved review threads (shows thread Node IDs)
-- `comment show <prNumber> <threadId>` - show thread details
-- `draft add <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment)
-- `draft show <prNumber>` - show saved drafts
- - `draft send <prNumber> [-f|--force]` - send drafts and optionally resolve
-  - `--dry-run` can be used to preview actions without making any changes.
+- `list [--repo owner/name]` - list open PRs (JSON)
+- `show <prNumber> [--repo owner/name]` - show PR details (JSON)
+- `comment list <prNumber> [--all]` - list review threads (JSON). By default returns unresolved threads; add `--all` to include resolved threads. Returns array of objects: `{ threadId, path, line, isResolved, comment: { id, databaseId, body, bodyText, bodyHTML, createdAt, commit:{oid}, originalCommit:{oid}, diffHunk, line, path, author, url } }`.
+- `comment show <prNumber> <threadId>` - show thread details (JSON). Returns `{ threadId, path, line, isResolved, comments: [...] }` with full comment metadata.
+- `draft add <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
+- `draft show <prNumber>` - show saved drafts (JSON)
+- `draft send <prNumber> [-f|--force]` - send drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
 - `draft clear <prNumber>` - clear drafts
 
 Storage

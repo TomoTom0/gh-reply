@@ -8,3 +8,4 @@
 - Harden `ghGraphql` retry/backoff and rate-limit handling.
 - Document contributor setup: `npm install`, `npm run build`, `gh auth login`.
 
+Note: JSON-first outputs and full comment/thread metadata have been implemented; adjust tests/docs accordingly.
