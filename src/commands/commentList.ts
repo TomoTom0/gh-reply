@@ -51,7 +51,7 @@ export default async function commentList(prNumber: string, includeResolved = fa
       return {
         threadId: node.id,
         path: node.path || null,
-        line: typeof line === 'number' ? line : (line ? Number(line) : null),
+        line: line ? +line : null,
         isResolved: !!node.isResolved,
         comment: {
           id: firstComment.id || null,
