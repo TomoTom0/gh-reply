@@ -166,7 +166,8 @@ export async function getPrDetails(prNumber: string, repoOverride?: string) {
   return out;
 }
 
-export async function requestWithRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 500): Promise<T> {
+export async function requestWithRetry<T>(fn: () => Promise<T>, retries = 3, baseDelayMs = 500): Promise<T> {
+  // Exponential backoff with full jitter per https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
   let attempt = 0;
   let lastErr: any;
   while (attempt < retries) {
@@ -176,7 +177,11 @@ export async function requestWithRetry<T>(fn: () => Promise<T>, retries = 3, del
       lastErr = e;
       attempt++;
       if (attempt >= retries) break;
-      await new Promise((res) => setTimeout(res, delayMs * attempt));
+      // exponential backoff with jitter
+      const exp = Math.pow(2, attempt);
+      const maxDelay = baseDelayMs * exp;
+      const delay = Math.floor(Math.random() * maxDelay);
+      await new Promise((res) => setTimeout(res, delay));
     }
   }
   throw lastErr;
