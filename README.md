@@ -4,6 +4,10 @@ CLI to manage draft replies to GitHub PR review comments.
 
 Prerequisites
 - `gh` (GitHub CLI) installed and authenticated (`gh auth login`).
+- Node.js >= 18 (ESM support)
+
+Note on ESM
+- This project has migrated to ECMAScript Modules (ESM). The built CLI is an ESM bundle in `dist/`. The `bin/gh-reply.js` shim dynamically imports the ESM bundle so you can run `node ./bin/gh-reply.js` after `npm run build`.
 
 Quick start
 - Build: `npm run build`
@@ -23,13 +27,13 @@ This runs `npm install` and builds the TypeScript sources.
 Running the CLI
 ---------------
 
-After building you can run the CLI with the local shim:
+After building the project (`npm run build`), run the CLI shim:
 
 ```
-node node_modules/.bin/gh-reply --help
+node ./bin/gh-reply.js --help
 ```
 
-Or run the built JS directly:
+Or use the built JS directly (Node must support ESM):
 
 ```
 npm run dev -- --help

@@ -8,5 +8,7 @@
  - All command outputs standardized to JSON on stdout; logs and status messages written to stderr.
  - `comment list` now supports `--all` to include resolved threads and returns detailed comment metadata (id, databaseId, body, bodyText, bodyHTML, createdAt, commit oid, originalCommit oid, diffHunk, line, path, author, url).
 - `comment show` returns thread details including `line` and full comment objects with metadata.
- - ESM migration completed; CLI updated to load dist ESM bundle via shim.
- - Added unit tests and CI workflow; tests cover store and mappers.
+- ESM migration completed; CLI updated to load dist ESM bundle via shim.
+- Added unit tests and CI workflow; tests cover store and mappers.
+ - README updated with ESM notes and CLI shim usage.
+ - Development scripts documented under `tools/README.scripts.md`.
