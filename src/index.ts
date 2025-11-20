@@ -2,8 +2,12 @@
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const program = new Command();
+// __dirname is not defined in ESM; derive from import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const pkgPath = path.join(__dirname, '..', 'package.json');
 let version = '0.0.0';
 try {
@@ -27,7 +31,6 @@ program
 program
   .command('show <prNumber>')
   .description('show PR details')
-  .option('--repo <owner/name>', 'specify repository')
   .action(async (prNumber: string, opts: any) => {
     // Show PR details as JSON using gh --json
     const repoOpt = program.opts().repo;

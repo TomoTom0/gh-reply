@@ -23,7 +23,24 @@ export default async function commentShow(prNumber: string, threadId: string) {
       }
     }
   }`;
-  const out = await ghGraphql(query);
+  let out: any;
+  try {
+    out = await ghGraphql(query);
+  } catch (err) {
+    // fallback to minimal node query when some fields are unavailable
+    const fallback = `{
+      node(id: \"${threadId}\") {
+        __typename
+        ... on PullRequestReviewThread {
+          id
+          isResolved
+          path
+          comments(first:50) { nodes { body author { login } createdAt url } }
+        }
+      }
+    }`;
+    out = await ghGraphql(fallback);
+  }
   try {
     const thread = out.data.node;
     // use mapper for consistent mapping logic
