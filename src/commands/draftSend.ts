@@ -1,12 +1,13 @@
-import { getDraftsForPr, removeDraft } from '../lib/store';
-import { gh, ghGraphql, buildResolveMutation, buildAddCommentMutation, getRepoInfo, getPrDetails, getAuthenticatedUser } from '../lib/gh';
-import { expandMagicVars } from '../lib/vars';
+import { getDraftsForPr, removeDraft } from '../lib/store.js';
+import { gh, ghGraphql, buildResolveMutation, buildAddCommentMutation, getRepoInfo, getPrDetails, getAuthenticatedUser } from '../lib/gh.js';
+import { expandMagicVars } from '../lib/vars.js';
 
 export default async function draftSend(prNumber: string, force = false, dryRun = false) {
   const drafts = await getDraftsForPr(prNumber);
   const chalk = (await import('chalk')).default;
-  const { ensureGhAvailable } = await import('../lib/gh');
+  const { ensureGhAvailable } = await import('../lib/gh.js');
   await ensureGhAvailable();
+  const repoOption = (await import('commander')).program.opts().repo;
   for (const [target, entry] of Object.entries(drafts)) {
     // main vs thread
     if (target === 'main') {
@@ -18,7 +19,7 @@ export default async function draftSend(prNumber: string, force = false, dryRun 
     }
 
     // Build magic var context
-    const repo = await getRepoInfo();
+    const repo = await getRepoInfo(repoOption);
     const prDetails = await getPrDetails(prNumber, `${repo.owner}/${repo.name}`);
     const authUser = await getAuthenticatedUser();
     // if target is a thread id, fetch the thread to get the first comment author and databaseId
@@ -80,10 +81,13 @@ export default async function draftSend(prNumber: string, force = false, dryRun 
         const vars = { threadId: target, body };
         if (!dryRun) await ghGraphql(mutation, vars);
         directReplySucceeded = true;
-        console.log(chalk.green('Direct replied to thread'), target);
+        // write status to stderr
+        // eslint-disable-next-line no-console
+        console.error('Direct reply succeeded', target);
       } catch (errAny) {
         const e = errAny as Error;
-        console.error(chalk.yellow('Direct reply failed for'), target, e.message || e);
+        // eslint-disable-next-line no-console
+        console.error('Direct reply failed for', target, e.message || e);
         directReplySucceeded = false;
       }
     }
@@ -107,10 +111,12 @@ export default async function draftSend(prNumber: string, force = false, dryRun 
         const resolveMutation = buildResolveMutation(target);
         try {
           if (!dryRun) await ghGraphql(resolveMutation);
-          console.log(chalk.green('Resolved'), target);
+          // eslint-disable-next-line no-console
+          console.error('Resolved', target);
         } catch (errAny) {
           const e = errAny as Error;
-          console.error(chalk.red('Failed to resolve'), target, e.message || e);
+          // eslint-disable-next-line no-console
+          console.error('Failed to resolve', target, e.message || e);
         }
       } else {
         console.log(chalk.yellow('Skipping resolve for'), target);
@@ -120,5 +126,7 @@ export default async function draftSend(prNumber: string, force = false, dryRun 
     await removeDraft(prNumber, target);
   }
 
-  console.log('All replies sent.');
+  // Final summary to stderr
+  // eslint-disable-next-line no-console
+  console.error('All replies processed.');
 }

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import os from 'os';
-import { DraftsSchema, Drafts, DraftEntry } from '../types';
+import { DraftsSchema, Drafts, DraftEntry } from '../types.js';
 
 const DRAFTS_PATH = path.join('.git', 'info', 'gh-reply-drafts.json');
 
@@ -16,7 +16,13 @@ export async function readDrafts(): Promise<Drafts> {
       return {};
     }
     const raw = await fs.readFile(DRAFTS_PATH, 'utf8');
-    const parsed = JSON.parse(raw || '{}');
+    let parsed: any = {};
+    try {
+      parsed = JSON.parse(raw || '{}');
+    } catch (e) {
+      // corrupted drafts file -> treat as empty
+      return {};
+    }
     const result = DraftsSchema.parse(parsed);
     return result;
   } catch (err) {
@@ -53,9 +59,22 @@ export async function removeDraft(prNumber: string, commentId: string): Promise<
 
 export async function clearDrafts(prNumber: string): Promise<void> {
   const drafts = await readDrafts();
-  if (drafts[prNumber]) {
-    delete drafts[prNumber];
+  // idempotent: remove pr entry if present
+  if (!drafts || !drafts[prNumber]) return;
+  delete drafts[prNumber];
+  try {
     await writeDrafts(drafts);
+  } catch (err) {
+    // on failure, attempt to restore original file from disk if possible
+    try {
+      const raw = await fs.readFile(DRAFTS_PATH, 'utf8');
+      // if we can parse, keep as-is; otherwise rethrow
+      JSON.parse(raw || '{}');
+    } catch (e) {
+      // write back a safe empty object
+      await writeDrafts({});
+    }
+    throw err;
   }
 }
 
