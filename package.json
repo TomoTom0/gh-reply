@@ -1,6 +1,6 @@
 {
   "name": "gh-reply",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI to manage draft replies to GitHub PR review comments",
   "bin": {
     "gh-reply": "bin/gh-reply.js"
