@@ -55,10 +55,21 @@ npm run dev -- --help
 
 
 Commands
-- `list [--repo owner/name]` - list open PRs (JSON)
+- `list [--repo owner/name] [--state <state>]` - list PRs (JSON)
+  - `--state`: open, closed, merged, all (default: open)
 - `show <prNumber> [--repo owner/name]` - show PR details (JSON)
-- `comment list <prNumber> [--all]` - list review threads (JSON). By default returns unresolved threads; add `--all` to include resolved threads. Returns array of objects: `{ threadId, path, line, isResolved, comment: { id, databaseId, body, bodyText, bodyHTML, createdAt, commit:{oid}, originalCommit:{oid}, diffHunk, line, path, author, url } }`.
-- `comment show <prNumber> <threadId>` - show thread details (JSON). Returns `{ threadId, path, line, isResolved, comments: [...] }` with full comment metadata.
+- `comment list <prNumber> [options]` - list review threads (JSON)
+  - `--all` - include resolved threads
+  - `--label <label>` - filter by PR label (comma-separated)
+  - `--comment-filter <filters>` - filter by `author:NAME`, `contains:TEXT`, `severity:LEVEL`
+  - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
+  - `--page <n>` - page number (default: 1)
+  - `--per-page <n>` - items per page (default: 10)
+  - Returns: `{ total, page, perPage, items: [{ threadId, path, line, isResolved, comment: {...} }] }`
+  - Note: Heavy fields (bodyHTML, diffHunk, commitOid, url) are excluded by default for performance.
+- `comment show <prNumber> <threadId> [--detail <cols>]` - show thread details (JSON)
+  - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
+  - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
 - `draft add <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
 - `draft show <prNumber>` - show saved drafts (JSON)
 - `draft send <prNumber> [-f|--force]` - send drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.

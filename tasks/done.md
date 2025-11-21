@@ -20,3 +20,4 @@
   - 単体テスト: commentList フィルタリング、listCmd バリデーション、vars 変数展開
   - 結合テスト: draft ワークフロー連携
   - 非破壊通信テスト: 実際の GitHub API を呼び出す読み取りテスト（TEST_REPO 環境変数で制御）
+- [2025-11-21] README.md を更新: 新オプション (--state, --page, --per-page, --detail, --comment-filter, --label) を文書化
