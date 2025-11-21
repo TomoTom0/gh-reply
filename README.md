@@ -61,14 +61,14 @@ Commands
 - `comment list <prNumber> [options]` - list review threads (JSON)
   - `--all` - include resolved threads
   - `--label <label>` - filter by PR label (comma-separated)
-  - `--comment-filter <filters>` - filter by author:NAME, contains:TEXT, severity:LEVEL
-  - `--detail <cols>` - include fields: url, bodyHTML, diffHunk, commitOid
+  - `--comment-filter <filters>` - filter by `author:NAME`, `contains:TEXT`, `severity:LEVEL`
+  - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - `--page <n>` - page number (default: 1)
   - `--per-page <n>` - items per page (default: 10)
   - Returns: `{ total, page, perPage, items: [{ threadId, path, line, isResolved, comment: {...} }] }`
   - Note: Heavy fields (bodyHTML, diffHunk, commitOid, url) are excluded by default for performance.
 - `comment show <prNumber> <threadId> [--detail <cols>]` - show thread details (JSON)
-  - `--detail <cols>` - include fields: url, bodyHTML, diffHunk, commitOid
+  - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
 - `draft add <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
 - `draft show <prNumber>` - show saved drafts (JSON)
