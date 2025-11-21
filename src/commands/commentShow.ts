@@ -45,12 +45,18 @@ export default async function commentShow(prNumber: string, threadId: string, de
     const thread = out.data.node;
     // use mapper for consistent mapping logic
     const { mapThreadDetail } = await import('../lib/mappers.js');
-    let mapped = mapThreadDetail(thread);
+    const mapped = mapThreadDetail(thread);
+    // detail フィールド除外（1回の map にまとめる）
     const detailSet = new Set((detail || '').split(',').map(s => s.trim()).filter(Boolean));
-    if (!detailSet.has('bodyHTML') && mapped.comments) mapped.comments = mapped.comments.map((c: any) => { delete c.bodyHTML; return c; });
-    if (!detailSet.has('diffHunk') && mapped.comments) mapped.comments = mapped.comments.map((c: any) => { delete c.diffHunk; return c; });
-    if (!detailSet.has('commitOid') && mapped.comments) mapped.comments = mapped.comments.map((c: any) => { delete c.commitOid; delete c.originalCommitOid; return c; });
-    if (!detailSet.has('url') && mapped.comments) mapped.comments = mapped.comments.map((c: any) => { delete c.url; return c; });
+    if (mapped.comments) {
+      mapped.comments = mapped.comments.map((c: any) => {
+        if (!detailSet.has('bodyHTML')) { delete c.bodyHTML; }
+        if (!detailSet.has('diffHunk')) { delete c.diffHunk; }
+        if (!detailSet.has('commitOid')) { delete c.commitOid; delete c.originalCommitOid; }
+        if (!detailSet.has('url')) { delete c.url; }
+        return c;
+      });
+    }
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(mapped, null, 2));
   } catch (e) {
