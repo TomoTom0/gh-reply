@@ -5,17 +5,29 @@
   "bin": {
     "gh-reply": "bin/gh-reply.js"
   },
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
     "dev": "node ./dist/index.js",
     "link-local": "node ./dist/index.js",
-    "setup": "npm install --no-audit --no-fund && npm run build"
+    "setup": "npm install --no-audit --no-fund && npm run build",
+    "test": "npm run build && node --test"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TomoTom0/gh-reply.git"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "src",
+    "README.md"
+  ],
   "dependencies": {
     "chalk": "^5.4.0",
     "commander": "^10.0.0",
