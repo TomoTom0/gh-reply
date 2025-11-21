@@ -21,11 +21,12 @@ program.option('--repo <owner/name>', 'specify repository');
 
 program
   .command('list')
-  .description('list open PRs')
+  .description('list PRs')
+  .option('--state <state>', 'PR state: open, closed, merged, all', 'open')
   .action(async (opts: any) => {
     const repo = program.opts().repo;
     const cmd = await import('./commands/listCmd.js');
-    await cmd.default(repo);
+    await cmd.default(repo, opts.state);
   });
 
 program
