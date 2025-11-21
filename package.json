@@ -13,7 +13,7 @@
     "dev": "node ./dist/index.js",
     "link-local": "node ./dist/index.js",
     "setup": "npm install --no-audit --no-fund && npm run build",
-    "test": "npm run build && node --test"
+    "test": "npm run build && node --test --test-concurrency=1"
   },
   "keywords": [],
   "author": "",
