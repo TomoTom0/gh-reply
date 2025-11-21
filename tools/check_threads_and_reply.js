@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'child_process';
 import fs from 'fs';
-const REPO = 'Tom oTom0/gh-reply';
-const REPO2 = 'TomoTom0/gh-reply';
+const REPO = 'TomoTom0/gh-reply';
 const PR = '1';
 
 function run(args) {
@@ -41,7 +40,7 @@ function checkImplemented(path) {
 
 function hasDetailedReply(threadId) {
   try {
-    const out = run(['comment', 'show', PR, threadId, '--repo', REPO2]);
+    const out = run(['comment', 'show', PR, threadId, '--repo', REPO]);
     const obj = JSON.parse(out);
     const comments = obj.comments || [];
     for (const c of comments) {
@@ -58,7 +57,7 @@ function hasDetailedReply(threadId) {
 
 function addDraft(threadId, message) {
   try {
-    execFileSync('node', ['./bin/gh-reply.js', 'draft', 'add', PR, threadId, message, '--repo', REPO2], { stdio: 'inherit' });
+    execFileSync('node', ['./bin/gh-reply.js', 'draft', 'add', PR, threadId, message, '--repo', REPO], { stdio: 'inherit' });
   } catch (e) {
     console.error('draft add failed', e.message);
   }
@@ -66,14 +65,14 @@ function addDraft(threadId, message) {
 
 function sendDrafts() {
   try {
-    execFileSync('node', ['./bin/gh-reply.js', 'draft', 'send', PR, '--repo', REPO2], { stdio: 'inherit' });
+    execFileSync('node', ['./bin/gh-reply.js', 'draft', 'send', PR, '--repo', REPO], { stdio: 'inherit' });
   } catch (e) {
     console.error('draft send failed', e.message);
   }
 }
 
 function main() {
-  const listOut = run(['comment', 'list', PR, '--repo', REPO2, '--all']);
+  const listOut = run(['comment', 'list', PR, '--repo', REPO, '--all']);
   const threads = JSON.parse(listOut);
   const toReply = [];
   for (const t of threads) {

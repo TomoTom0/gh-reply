@@ -58,7 +58,7 @@ export default async function commentList(prNumber: string, opts: Options | bool
     const prNode = out.data.repository.pullRequest;
     const prLabels = (prNode.labels && prNode.labels.nodes || []).map((l: any) => String(l.name).toLowerCase());
 
-    // --label オプション: PRが指定ラベルを持っているかチェック
+    // --label option: check if the PR has the specified labels
     if (options.label) {
       const requiredLabels = options.label.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
       const hasAllLabels = requiredLabels.every((label: string) => prLabels.includes(label));
