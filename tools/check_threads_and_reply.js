@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'child_process';
 import fs from 'fs';
-const REPO = 'Tom oTom0/gh-reply';
+const REPO = 'TomoTom0/gh-reply';
 const REPO2 = 'TomoTom0/gh-reply';
 const PR = '1';
 

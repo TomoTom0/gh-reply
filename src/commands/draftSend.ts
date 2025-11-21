@@ -19,7 +19,7 @@ export default async function draftSend(prNumber: string, force = false, dryRun 
     }
 
     // Build magic var context
-    const repo = await getRepoInfo();
+    const repo = await getRepoInfo(repoOption);
     const prDetails = await getPrDetails(prNumber, `${repo.owner}/${repo.name}`);
     const authUser = await getAuthenticatedUser();
     // if target is a thread id, fetch the thread to get the first comment author and databaseId

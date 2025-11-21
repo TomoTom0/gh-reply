@@ -35,14 +35,9 @@ program
   .action(async (prNumber: string, opts: any) => {
     // Show PR details as JSON using gh --json
     const repoOpt = program.opts().repo;
-    const { getRepoInfo, ghJson } = await import('./lib/gh.js');
-    let repo = repoOpt;
-    if (!repo) {
-      const r = await getRepoInfo();
-      repo = `${r.owner}/${r.name}`;
-    }
+    const { ghJson } = await import('./lib/gh.js');
     const args = ['pr', 'view', prNumber, '--json', 'title,body,author,headRefName,baseRefName,headRefOid,url'];
-    if (repo) args.push('--repo', repo);
+    if (repoOpt) args.push('--repo', repoOpt);
     const out = await ghJson(args);
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(out, null, 2));
