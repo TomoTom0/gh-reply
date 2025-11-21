@@ -21,11 +21,12 @@ program.option('--repo <owner/name>', 'specify repository');
 
 program
   .command('list')
-  .description('list open PRs')
+  .description('list PRs')
+  .option('--state <state>', 'PR state: open, closed, merged, all', 'open')
   .action(async (opts: any) => {
     const repo = program.opts().repo;
     const cmd = await import('./commands/listCmd.js');
-    await cmd.default(repo);
+    await cmd.default(repo, opts.state);
   });
 
 program
@@ -53,17 +54,32 @@ comment
   .command('list <prNumber>')
   .description('list review threads for a PR')
   .option('--all', 'include resolved threads')
+  .option('--label <label>', 'filter by PR label')
+  .option('--comment-filter <filters>', 'filter comments by author:NAME,contains:TEXT,severity:LEVEL (comma-separated)')
+  .option('--detail <cols>', 'comma-separated detail fields to include (e.g. url,bodyHTML,diffHunk,commitOid)')
+  .option('--page <n>', 'page number (1-based)', '1')
+  .option('--per-page <n>', 'items per page', '10')
   .action(async (prNumber: string, opts: any) => {
     const cmd = await import('./commands/commentList.js');
-    await cmd.default(prNumber, !!opts.all);
+    const page = Number(opts.page || 1);
+    const perPage = Number(opts.perPage || opts['per-page'] || 10);
+    await cmd.default(prNumber, {
+      includeResolved: !!opts.all,
+      label: opts.label || undefined,
+      detail: opts.detail || undefined,
+      page,
+      perPage,
+      commentFilter: opts.commentFilter || undefined,
+    });
   });
 
 comment
   .command('show <prNumber> <threadId>')
   .description('show review thread details')
-  .action(async (prNumber: string, threadId: string) => {
+  .option('--detail <cols>', 'comma-separated detail fields to include')
+  .action(async (prNumber: string, threadId: string, opts: any) => {
     const cmd = await import('./commands/commentShow.js');
-    await cmd.default(prNumber, threadId);
+    await cmd.default(prNumber, threadId, opts.detail);
   });
 
 comment

@@ -2,7 +2,17 @@ import { getRepoInfo, ghGraphql } from '../lib/gh.js';
 import { program } from 'commander';
 import { mapThreadNode } from '../lib/mappers.js';
 
-export default async function commentList(prNumber: string, includeResolved = false) {
+type Options = {
+  includeResolved?: boolean;
+  label?: string | undefined;
+  detail?: string | undefined;
+  page?: number;
+  perPage?: number;
+  commentFilter?: string | undefined;
+};
+
+export default async function commentList(prNumber: string, opts: Options | boolean = false) {
+  const options: Options = typeof opts === 'boolean' ? { includeResolved: opts } : opts || {};
   const { ensureGhAvailable } = await import('../lib/gh.js');
   await ensureGhAvailable();
   const repoOption = program.opts().repo;
@@ -11,6 +21,7 @@ export default async function commentList(prNumber: string, includeResolved = fa
   const query = `{
     repository(owner: \"${repo.owner}\", name: \"${repo.name}\") {
       pullRequest(number: ${prNumber}) {
+        labels(first:100) { nodes { name } }
         reviewThreads(first:100) {
           nodes {
             id
@@ -44,12 +55,70 @@ export default async function commentList(prNumber: string, includeResolved = fa
     out = await ghGraphql(fallback);
   }
   try {
-    const nodes = out.data.repository.pullRequest.reviewThreads.nodes;
-    const filtered = includeResolved ? nodes : nodes.filter((n: any) => !n.isResolved);
-    const mapped = filtered.map((node: any) => mapThreadNode(node));
+    const prNode = out.data.repository.pullRequest;
+    const prLabels = (prNode.labels && prNode.labels.nodes || []).map((l: any) => String(l.name).toLowerCase());
+
+    // --label オプション: PRが指定ラベルを持っているかチェック
+    if (options.label) {
+      const requiredLabels = options.label.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+      const hasAllLabels = requiredLabels.every((label: string) => prLabels.includes(label));
+      if (!hasAllLabels) {
+        // PRが指定ラベルを持っていない場合は空の結果を返す
+        const emptyResult = { total: 0, page: 1, perPage: options.perPage || 10, items: [], filteredByLabel: true, missingLabels: requiredLabels.filter((l: string) => !prLabels.includes(l)) };
+        // eslint-disable-next-line no-console
+        console.log(JSON.stringify(emptyResult, null, 2));
+        return;
+      }
+    }
+
+    const nodes = prNode.reviewThreads.nodes;
+    const filteredNodes = options.includeResolved ? nodes : nodes.filter((n: any) => !n.isResolved);
+    let mappedItems = filteredNodes.map((node: any) => mapThreadNode(node));
+
+    // comment-filter を適用（ページネーションの前に）
+    const cf = options.commentFilter || '';
+    const filters = (cf || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+    if (filters.length > 0) {
+      mappedItems = mappedItems.filter((it: any) => {
+        const c = it.comment || {};
+        for (const f of filters) {
+          const [k, v] = f.split(':', 2).map((s: string) => s.trim());
+          if (!k || !v) continue;
+          if (k === 'author' && String(c.author || '').toLowerCase() !== v.toLowerCase()) return false;
+          if (k === 'contains' && !(String(c.body || '').toLowerCase().includes(v.toLowerCase()))) return false;
+          if (k === 'severity') {
+            const sev = v.toLowerCase();
+            if (!prLabels.includes(sev) && !(String(c.body || '').toLowerCase().includes(sev))) return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // pagination（フィルタリング後に適用）
+    const total = mappedItems.length;
+    const page = options.page && options.page > 0 ? options.page : 1;
+    const perPage = options.perPage && options.perPage > 0 ? options.perPage : 10;
+    const start = (page - 1) * perPage;
+    const pageItems = mappedItems.slice(start, start + perPage);
+
+    // detail フィールド除外（1回の map にまとめる）
+    const detailSet = new Set((options.detail || '').split(',').map((s: string) => s.trim()).filter(Boolean));
+    const mapped = pageItems.map((m: any) => {
+      if (m.comment) {
+        if (!detailSet.has('bodyHTML')) { delete m.comment.bodyHTML; }
+        if (!detailSet.has('diffHunk')) { delete m.comment.diffHunk; }
+        if (!detailSet.has('commitOid')) { delete m.comment.commitOid; delete m.comment.originalCommitOid; }
+        if (!detailSet.has('url')) { delete m.comment.url; }
+      }
+      return m;
+    });
+
+    // include pagination metadata
+    const result = { total, page, perPage, items: mapped };
     // output JSON on stdout
     // eslint-disable-next-line no-console
-    console.log(JSON.stringify(mapped, null, 2));
+    console.log(JSON.stringify(result, null, 2));
   } catch (e) {
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(out, null, 2));

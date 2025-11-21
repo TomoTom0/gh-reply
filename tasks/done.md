@@ -12,3 +12,11 @@
 - Added unit tests and CI workflow; tests cover store and mappers.
  - README updated with ESM notes and CLI shim usage.
  - Development scripts documented under `tools/README.scripts.md`.
+- [2025-11-21] `comment list` に新オプション追加: `--page`, `--per-page` (ページネーション), `--detail` (詳細フィールド選択), `--comment-filter` (コメントフィルター), `--label` (PRラベルフィルター)
+- [2025-11-21] `comment show` に `--detail` オプション追加
+- [2025-11-21] デフォルトで重いフィールド (bodyHTML, diffHunk, commitOid, url) を除外し、出力を軽量化
+- [2025-11-21] `list` コマンドに `--state` オプション追加 (open, closed, merged, all)
+- [2025-11-21] 自動テストを大幅に拡充:
+  - 単体テスト: commentList フィルタリング、listCmd バリデーション、vars 変数展開
+  - 結合テスト: draft ワークフロー連携
+  - 非破壊通信テスト: 実際の GitHub API を呼び出す読み取りテスト（TEST_REPO 環境変数で制御）
