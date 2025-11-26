@@ -105,6 +105,10 @@ Notes
 - `gh-reply comment draft <prNumber> --send [-f|--force] [--dry-run]` — 保存済みの全下書きを送信します。`-f` は本文が空でも強制的に解決を行います。
 - `gh-reply comment draft <prNumber> --clear` — 全下書きをクリアします。
 
+### 環境変数
+
+- `GHREPLY_RESOLVE=false` — `--resolve` オプションを無効化します。誤ってスレッドを解決してしまうのを防ぎます。デフォルトは有効です。
+
 GraphQL Node ID を直接使うことで、該当スレッドを特定して返信できます。ツールは可能な限りスレッドへ直接返信することを試みます（GraphQL/REST の状況に依存します）。
 
 フォールバック動作
