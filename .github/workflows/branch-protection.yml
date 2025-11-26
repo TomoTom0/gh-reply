@@ -1,0 +1,32 @@
+name: Branch Protection
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - dev
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR to main is from dev
+        if: github.base_ref == 'main'
+        run: |
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "❌ Error: PRs to main branch must come from dev branch only"
+            echo "Current source branch: ${{ github.head_ref }}"
+            exit 1
+          fi
+          echo "✅ PR is from dev branch"
+
+      - name: Check PR to dev is from feature branch
+        if: github.base_ref == 'dev'
+        run: |
+          if [[ "${{ github.head_ref }}" == "main" ]] || [[ "${{ github.head_ref }}" == "dev" ]]; then
+            echo "❌ Error: PRs to dev branch must come from feature branches"
+            echo "Current source branch: ${{ github.head_ref }}"
+            exit 1
+          fi
+          echo "✅ PR is from feature branch: ${{ github.head_ref }}"
