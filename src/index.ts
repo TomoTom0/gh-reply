@@ -16,6 +16,7 @@ try {
 } catch (_e) {}
 
 program.name('gh-reply').version(version);
+program.description('CLI to manage draft replies to GitHub PR review comments\n\nEnvironment Variables:\n  GHREPLY_RESOLVE=false  Disable --resolve option to prevent accidental thread resolution');
 // --repo is optional; gh CLI can infer repository from CWD when run inside a git repo
 program.option('--repo <owner/name>', 'specify repository');
 
@@ -79,7 +80,7 @@ comment
 
 comment
   .command('reply <prNumber> <targetId> <body>')
-  .option('-r, --resolve', 'resolve thread after reply')
+  .option('-r, --resolve', 'resolve thread after reply (disabled by GHREPLY_RESOLVE=false)')
   .option('--dry-run', 'show actions without making changes')
   .description('reply to review thread (immediate send)')
   .action(async (prNumber: string, targetId: string, body: string, opts: any) => {
@@ -89,7 +90,7 @@ comment
 
 comment
   .command('draft <prNumber> [targetId] [body]')
-  .option('-r, --resolve', 'mark to resolve after sending')
+  .option('-r, --resolve', 'mark to resolve after sending (disabled by GHREPLY_RESOLVE=false)')
   .option('--send', 'send all saved drafts')
   .option('-f, --force', 'force resolve even with empty body (used with --send)')
   .option('--dry-run', 'show actions without making changes (used with --send)')
