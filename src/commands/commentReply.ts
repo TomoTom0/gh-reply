@@ -1,5 +1,4 @@
-import { addOrUpdateDraft } from '../lib/store.js';
-import draftSend from './draftSend.js';
+import { sendSingleReply } from '../lib/sendSingleReply.js';
 
 export default async function commentReply(
   prNumber: string, 
@@ -16,9 +15,6 @@ export default async function commentReply(
     resolve = false;
   }
   
-  // Add draft temporarily
-  await addOrUpdateDraft(prNumber, targetId, { body, resolve });
-  
-  // Immediately send
-  await draftSend(prNumber, false, dryRun);
+  // Send single reply without touching draft store
+  await sendSingleReply(prNumber, targetId, body, resolve, false, dryRun);
 }

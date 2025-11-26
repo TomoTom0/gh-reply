@@ -74,7 +74,7 @@ Commands
   - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
 - `comment reply <prNumber> <threadId|main> <body> [-r|--resolve] [--dry-run]` - reply to review thread (immediate send). Status messages printed to stderr.
-- `comment draft <prNumber> <threadId> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
+- `comment draft <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
 - `comment draft <prNumber> --show` - show saved drafts (JSON)
 - `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
 - `comment draft <prNumber> --clear` - clear all drafts
