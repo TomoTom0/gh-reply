@@ -5,7 +5,7 @@ export default async function draftAdd(prNumber: string, targetId: string, body:
   
   if (resolve && !resolveEnabled) {
     // eslint-disable-next-line no-console
-    console.error('Warning: --resolve-force is disabled by GHREPLY_RESOLVE=false');
+    console.error('Warning: --resolve is disabled by GHREPLY_RESOLVE=false');
     resolve = false;
   }
   
