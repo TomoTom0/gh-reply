@@ -9,6 +9,9 @@ Prerequisites
 Note on ESM
 - This project has migrated to ECMAScript Modules (ESM). The built CLI is an ESM bundle in `dist/`. The `bin/gh-reply.js` shim dynamically imports the ESM bundle so you can run `node ./bin/gh-reply.js` after `npm run build`.
 
+Environment Variables
+- `GHREPLY_RESOLVE`: Set to `false` to disable the `--resolve-force` option. This prevents accidentally resolving review threads. Default is enabled.
+
 Publishing
 -----------
 
