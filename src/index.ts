@@ -77,43 +77,45 @@ comment
     await cmd.default(prNumber, threadId, opts.detail);
   });
 
-
-
-const draft = program.command('draft').description('draft management');
-
-draft
-  .command('add <prNumber> <targetId> <body>')
-  .option('-r, --resolve-force', 'mark to resolve after sending')
-  .description('add draft reply')
-  .action(async (prNumber: string, targetId: string, body: string, opts: any) => {
-    const cmd = await import('./commands/draftAdd.js');
-    await cmd.default(prNumber, targetId, body, !!opts.resolveForce);
-  });
-
-draft
-  .command('show <prNumber>')
-  .description('show drafts for PR')
-  .action(async (prNumber: string) => {
-    const cmd = await import('./commands/draftShow.js');
-    await cmd.default(prNumber);
-  });
-
-draft
-  .command('send <prNumber>')
-  .option('-f, --force', 'force resolve even with empty body')
-  .description('send drafts for PR')
+comment
+  .command('reply <prNumber> <targetId> <body>')
+  .option('-r, --resolve', 'resolve thread after reply')
   .option('--dry-run', 'show actions without making changes')
-  .action(async (prNumber: string, opts: any) => {
-    const cmd = await import('./commands/draftSend.js');
-    await cmd.default(prNumber, !!opts.force, !!opts.dryRun);
+  .description('reply to review thread (immediate send)')
+  .action(async (prNumber: string, targetId: string, body: string, opts: any) => {
+    const cmd = await import('./commands/commentReply.js');
+    await cmd.default(prNumber, targetId, body, !!opts.resolve, !!opts.dryRun);
   });
 
-draft
-  .command('clear <prNumber>')
-  .description('clear drafts for PR')
-  .action(async (prNumber: string) => {
-    const cmd = await import('./commands/draftClear.js');
-    await cmd.default(prNumber);
+comment
+  .command('draft <prNumber> [targetId] [body]')
+  .option('-r, --resolve', 'mark to resolve after sending')
+  .option('--send', 'send all saved drafts')
+  .option('-f, --force', 'force resolve even with empty body (used with --send)')
+  .option('--dry-run', 'show actions without making changes (used with --send)')
+  .option('--show', 'show drafts for PR')
+  .option('--clear', 'clear drafts for PR')
+  .description('manage draft replies')
+  .action(async (prNumber: string, targetId: string | undefined, body: string | undefined, opts: any) => {
+    // Priority: --send > --show > --clear > add draft
+    if (opts.send) {
+      const cmd = await import('./commands/draftSend.js');
+      await cmd.default(prNumber, !!opts.force, !!opts.dryRun);
+    } else if (opts.show) {
+      const cmd = await import('./commands/draftShow.js');
+      await cmd.default(prNumber);
+    } else if (opts.clear) {
+      const cmd = await import('./commands/draftClear.js');
+      await cmd.default(prNumber);
+    } else {
+      // Add draft - targetId and body are required
+      if (!targetId || body === undefined) {
+        console.error('Error: <targetId> and <body> are required when adding a draft');
+        process.exit(1);
+      }
+      const cmd = await import('./commands/draftAdd.js');
+      await cmd.default(prNumber, targetId, body, !!opts.resolve);
+    }
   });
 
 program.parse(process.argv);

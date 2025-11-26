@@ -1,6 +1,13 @@
 import { addOrUpdateDraft } from '../lib/store.js';
+import draftSend from './draftSend.js';
 
-export default async function draftAdd(prNumber: string, targetId: string, body: string, resolve = false) {
+export default async function commentReply(
+  prNumber: string, 
+  targetId: string, 
+  body: string, 
+  resolve = false,
+  dryRun = false
+) {
   const resolveEnabled = process.env['GHREPLY_RESOLVE'] !== 'false';
   
   if (resolve && !resolveEnabled) {
@@ -9,8 +16,9 @@ export default async function draftAdd(prNumber: string, targetId: string, body:
     resolve = false;
   }
   
+  // Add draft temporarily
   await addOrUpdateDraft(prNumber, targetId, { body, resolve });
-  // status on stderr
-  // eslint-disable-next-line no-console
-  console.error('Draft saved.');
+  
+  // Immediately send
+  await draftSend(prNumber, false, dryRun);
 }
