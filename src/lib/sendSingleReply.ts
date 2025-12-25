@@ -1,5 +1,6 @@
 import { gh, ghGraphql, buildResolveMutation, getRepoInfo, getPrDetails, getAuthenticatedUser } from './gh.js';
 import { expandMagicVars } from './vars.js';
+import os from 'os';
 
 export interface ReplyContext {
   repo_owner: string;
@@ -56,7 +57,7 @@ export async function buildReplyContext(prNumber: string, target: string, repoOp
     pr_number: String(prNumber),
     reply_to: replyToAuthor,
     date: new Date().toISOString(),
-    username: authUser || process.env['USER'] || '',
+    username: authUser || os.userInfo().username || '',
     repo_url: `https://github.com/${repo.owner}/${repo.name}`,
     base_branch: String(prDetails.baseRefName || ''),
     head_branch: String(prDetails.headRefName || ''),
