@@ -1,11 +1,11 @@
 import { gh, ghGraphql, buildResolveMutation, getRepoInfo, getPrDetails, getAuthenticatedUser } from './gh.js';
 import { expandMagicVars } from './vars.js';
+import os from 'os';
 
-export interface ReplyContext {
+export interface BaseReplyContext {
   repo_owner: string;
   repo_name: string;
   pr_number: string;
-  reply_to: string;
   date: string;
   username: string;
   repo_url: string;
@@ -16,11 +16,47 @@ export interface ReplyContext {
   local_commit: string;
 }
 
-export async function buildReplyContext(prNumber: string, target: string, repoOption?: string): Promise<ReplyContext> {
+export interface ReplyContext extends BaseReplyContext {
+  reply_to: string;
+}
+
+export async function buildBaseReplyContext(prNumber: string, repoOption?: string): Promise<BaseReplyContext> {
   const repo = await getRepoInfo(repoOption);
   const prDetails = await getPrDetails(prNumber, `${repo.owner}/${repo.name}`);
   const authUser = await getAuthenticatedUser();
   
+  let localCommit = '';
+  try {
+    const { execa } = await import('execa');
+    const r = await execa('git', ['rev-parse', 'HEAD']);
+    localCommit = (r.stdout || '').trim();
+  } catch (_) {}
+
+  let username = authUser || '';
+  if (!username) {
+    try {
+      username = os.userInfo().username || '';
+    } catch {
+      username = '';
+    }
+  }
+
+  return {
+    repo_owner: String(repo.owner),
+    repo_name: String(repo.name),
+    pr_number: String(prNumber),
+    date: new Date().toISOString(),
+    username,
+    repo_url: `https://github.com/${repo.owner}/${repo.name}`,
+    base_branch: String(prDetails.baseRefName || ''),
+    head_branch: String(prDetails.headRefName || ''),
+    pr_title: String(prDetails.title || ''),
+    author: String((prDetails.author && prDetails.author.login) || ''),
+    local_commit: localCommit,
+  };
+}
+
+export async function getReplyToAuthor(target: string): Promise<string> {
   let replyToAuthor = String(target);
   if (target !== 'main') {
     try {
@@ -42,27 +78,16 @@ export async function buildReplyContext(prNumber: string, target: string, repoOp
       // ignore and fall back to target
     }
   }
-  
-  let localCommit = '';
-  try {
-    const { execa } = await import('execa');
-    const r = await execa('git', ['rev-parse', 'HEAD']);
-    localCommit = (r.stdout || '').trim();
-  } catch (_) {}
+  return replyToAuthor;
+}
 
+export async function buildReplyContext(prNumber: string, target: string, repoOption?: string): Promise<ReplyContext> {
+  const baseContext = await buildBaseReplyContext(prNumber, repoOption);
+  const replyToAuthor = await getReplyToAuthor(target);
+  
   return {
-    repo_owner: String(repo.owner),
-    repo_name: String(repo.name),
-    pr_number: String(prNumber),
+    ...baseContext,
     reply_to: replyToAuthor,
-    date: new Date().toISOString(),
-    username: authUser || process.env['USER'] || '',
-    repo_url: `https://github.com/${repo.owner}/${repo.name}`,
-    base_branch: String(prDetails.baseRefName || ''),
-    head_branch: String(prDetails.headRefName || ''),
-    pr_title: String(prDetails.title || ''),
-    author: String((prDetails.author && prDetails.author.login) || ''),
-    local_commit: localCommit,
   };
 }
 

@@ -1,4 +1,5 @@
 import { sendSingleReply } from '../lib/sendSingleReply.js';
+import { shouldResolve } from '../lib/envUtils.js';
 
 export default async function commentReply(
   prNumber: string, 
@@ -7,13 +8,7 @@ export default async function commentReply(
   resolve = false,
   dryRun = false
 ) {
-  const resolveEnabled = process.env['GHREPLY_RESOLVE'] !== 'false';
-  
-  if (resolve && !resolveEnabled) {
-    // eslint-disable-next-line no-console
-    console.error('Warning: --resolve is disabled by GHREPLY_RESOLVE=false');
-    resolve = false;
-  }
+  resolve = shouldResolve(resolve);
   
   // Send single reply without touching draft store
   await sendSingleReply(prNumber, targetId, body, resolve, false, dryRun);
