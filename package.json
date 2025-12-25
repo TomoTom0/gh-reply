@@ -7,6 +7,17 @@
   },
   "type": "module",
   "main": "dist/index.js",
+  "gh-extension": {
+    "installable": true,
+    "displayName": "Reply to PR review comments",
+    "category": "pr",
+    "tags": [
+      "pr",
+      "review",
+      "comments",
+      "draft"
+    ]
+  },
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",

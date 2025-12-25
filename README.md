@@ -9,6 +9,9 @@ Prerequisites
 Note on ESM
 - This project has migrated to ECMAScript Modules (ESM). The built CLI is an ESM bundle in `dist/`. The `bin/gh-reply.js` shim dynamically imports the ESM bundle so you can run `node ./bin/gh-reply.js` after `npm run build`.
 
+Environment Variables
+- `GHREPLY_RESOLVE`: Set to `false` to disable the `--resolve` option. This prevents accidentally resolving review threads. Default is enabled.
+
 Publishing
 -----------
 
@@ -70,27 +73,41 @@ Commands
 - `comment show <prNumber> <threadId> [--detail <cols>]` - show thread details (JSON)
   - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
-- `draft add <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
-- `draft show <prNumber>` - show saved drafts (JSON)
-- `draft send <prNumber> [-f|--force]` - send drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
-- `draft clear <prNumber>` - clear drafts
+- `comment reply <prNumber> <threadId|main> <body> [-r|--resolve] [--dry-run]` - reply to review thread (immediate send). Status messages printed to stderr.
+- `comment draft <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
+- `comment draft <prNumber> --show` - show saved drafts (JSON)
+- `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
+- `comment draft <prNumber> --clear` - clear all drafts
 
 Storage
 - Drafts are stored in `.git/info/gh-reply-drafts.json` in the repository.
 
 Notes
 - Thread IDs used are GraphQL Node IDs (base64). Use `comment list` to get them.
-- `draft send` will `addComment` to threads and `resolveReviewThread` when `--resolve` was set when saving the draft.
+- `comment reply` immediately sends the reply to the specified thread.
+- `comment draft <prNumber> <threadId> <body>` saves a draft locally; use `comment draft <prNumber> --send` to send all saved drafts.
+- Both reply methods will `resolveReviewThread` when `--resolve` or `-r` is specified.
 
 返信（レビューコメントへの直接返信）
 ---------------------------------
 
-このツールはレビューの指摘（review thread）に対してローカルで下書きを作成し、一括で返信・解決できます。基本的な流れ:
+このツールはレビューの指摘（review thread）に対して即座に返信、または下書きを作成して一括送信できます。
+
+### 即座に返信する場合
 
 - `gh-reply comment list <prNumber>` — PR の未解決スレッドを一覧表示します。出力される `id` は GraphQL の Node ID（例: `PRRT_kw...`）です。
-- `gh-reply draft add <prNumber> <threadId|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に対する下書きを保存します。`-r` を付けると送信後にそのスレッドを「解決（resolve）」します。
-- `gh-reply draft show <prNumber>` — 下書きを確認します。
-- `gh-reply draft send <prNumber> [-f|--force]` — 下書きを送信します。`-f` は本文が空でも強制的に解決を行います。
+- `gh-reply comment reply <prNumber> <threadId|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に即座に返信します。`-r` を付けるとスレッドを「解決（resolve）」します。
+
+### 下書きを使う場合
+
+- `gh-reply comment draft <prNumber> <threadId|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に対する下書きを保存します。`-r` を付けると送信後にそのスレッドを「解決（resolve）」します。
+- `gh-reply comment draft <prNumber> --show` — 下書きを確認します。
+- `gh-reply comment draft <prNumber> --send [-f|--force] [--dry-run]` — 保存済みの全下書きを送信します。`-f` は本文が空でも強制的に解決を行います。
+- `gh-reply comment draft <prNumber> --clear` — 全下書きをクリアします。
+
+### 環境変数
+
+- `GHREPLY_RESOLVE=false` — `--resolve` オプションを無効化します。誤ってスレッドを解決してしまうのを防ぎます。デフォルトは有効です。
 
 GraphQL Node ID を直接使うことで、該当スレッドを特定して返信できます。ツールは可能な限りスレッドへ直接返信することを試みます（GraphQL/REST の状況に依存します）。
 
