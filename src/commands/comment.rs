@@ -4,11 +4,16 @@ use crate::context::ContextBuilder;
 use crate::vars::TemplateExpander;
 
 /// Resolve thread identifier to thread ID
-/// If the identifier is a number (index), fetch threads and resolve to ID
+/// If the identifier starts with '#', treat it as an index (e.g., #1, #2)
 /// Otherwise, treat it as a thread ID directly
 pub async fn resolve_thread_id(client: &GhClient, pr_number: u32, identifier: &str) -> Result<String> {
-    // Try to parse as a number (index)
-    if let Ok(index) = identifier.parse::<usize>() {
+    // Check if it's an index (starts with '#')
+    if let Some(index_str) = identifier.strip_prefix('#') {
+        let index = index_str.parse::<usize>()
+            .map_err(|_| crate::error::GhReplyError::GhError(
+                format!("Invalid index format: '{}'. Use #1, #2, etc.", identifier)
+            ))?;
+
         let threads = client.get_review_threads(pr_number).await?;
 
         // Check if index is valid (1-based)
@@ -21,7 +26,7 @@ pub async fn resolve_thread_id(client: &GhClient, pr_number: u32, identifier: &s
         // Return thread ID (index is 1-based)
         Ok(threads[index - 1].id.clone())
     } else {
-        // Treat as thread ID
+        // Treat as thread ID directly
         Ok(identifier.to_string())
     }
 }

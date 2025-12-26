@@ -388,26 +388,9 @@ impl GhClient {
             "body": body
         });
 
-        match self.gh_graphql(mutation, Some(variables)).await {
-            Ok(_) => {
-                eprintln!("Direct reply succeeded for thread {}", thread_id);
-                Ok(())
-            }
-            Err(e) => {
-                eprintln!("Direct reply failed, falling back to PR comment: {}", e);
-                // Fallback to PR comment
-                let pr_num_str = pr_number.to_string();
-                let args = vec![
-                    "pr",
-                    "comment",
-                    &pr_num_str,
-                    "--body",
-                    body,
-                ];
-                self.gh_exec(&args, None)?;
-                Ok(())
-            }
-        }
+        self.gh_graphql(mutation, Some(variables)).await?;
+        eprintln!("Reply posted to thread {}", thread_id);
+        Ok(())
     }
 
     /// Resolve a review thread
