@@ -5,7 +5,7 @@ use crate::github::GhClient;
 use crate::context::ContextBuilder;
 use crate::vars::TemplateExpander;
 
-pub async fn add(pr_number: u32, thread_identifier: &str, message: &str, resolve: bool) -> Result<()> {
+pub async fn add(pr_number: u32, thread_id: Option<&str>, index: Option<usize>, message: &str, resolve: bool) -> Result<()> {
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
@@ -13,7 +13,7 @@ pub async fn add(pr_number: u32, thread_identifier: &str, message: &str, resolve
     let client = GhClient::new(None);
 
     // Resolve thread identifier to thread ID
-    let thread_id = super::comment::resolve_thread_id(&client, pr_number, thread_identifier).await?;
+    let thread_id = super::comment::resolve_thread_id(&client, pr_number, thread_id, index).await?;
 
     // Load draft store
     let mut store = DraftStore::load()?;

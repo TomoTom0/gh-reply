@@ -4,30 +4,42 @@ use crate::context::ContextBuilder;
 use crate::vars::TemplateExpander;
 
 /// Resolve thread identifier to thread ID
-/// If the identifier starts with '#', treat it as an index (e.g., #1, #2)
-/// Otherwise, treat it as a thread ID directly
-pub async fn resolve_thread_id(client: &GhClient, pr_number: u32, identifier: &str) -> Result<String> {
-    // Check if it's an index (starts with '#')
-    if let Some(index_str) = identifier.strip_prefix('#') {
-        let index = index_str.parse::<usize>()
-            .map_err(|_| crate::error::GhReplyError::GhError(
-                format!("Invalid index format: '{}'. Use #1, #2, etc.", identifier)
-            ))?;
-
-        let threads = client.get_review_threads(pr_number).await?;
-
-        // Check if index is valid (1-based)
-        if index == 0 || index > threads.len() {
-            return Err(crate::error::GhReplyError::GhError(
-                format!("Thread index {} is out of range (1-{})", index, threads.len())
-            ));
+/// Either thread_id or index must be provided
+pub async fn resolve_thread_id(
+    client: &GhClient,
+    pr_number: u32,
+    thread_id: Option<&str>,
+    index: Option<usize>
+) -> Result<String> {
+    match (thread_id, index) {
+        (Some(id), None) => {
+            // Thread ID provided directly
+            Ok(id.to_string())
         }
+        (None, Some(idx)) => {
+            // Index provided, resolve to thread ID
+            let threads = client.get_review_threads(pr_number).await?;
 
-        // Return thread ID (index is 1-based)
-        Ok(threads[index - 1].id.clone())
-    } else {
-        // Treat as thread ID directly
-        Ok(identifier.to_string())
+            // Check if index is valid (1-based)
+            if idx == 0 || idx > threads.len() {
+                return Err(crate::error::GhReplyError::GhError(
+                    format!("Thread index {} is out of range (1-{})", idx, threads.len())
+                ));
+            }
+
+            // Return thread ID (index is 1-based)
+            Ok(threads[idx - 1].id.clone())
+        }
+        (Some(_), Some(_)) => {
+            Err(crate::error::GhReplyError::GhError(
+                "Cannot specify both thread_id and index".to_string()
+            ))
+        }
+        (None, None) => {
+            Err(crate::error::GhReplyError::GhError(
+                "Must specify either thread_id or --index".to_string()
+            ))
+        }
     }
 }
 
@@ -74,7 +86,7 @@ pub async fn list(
     Ok(())
 }
 
-pub async fn show(pr_number: u32, thread_identifier: &str, _detail: Option<&str>) -> Result<()> {
+pub async fn show(pr_number: u32, thread_id: Option<&str>, index: Option<usize>, _detail: Option<&str>) -> Result<()> {
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
@@ -82,7 +94,7 @@ pub async fn show(pr_number: u32, thread_identifier: &str, _detail: Option<&str>
     let client = GhClient::new(None);
 
     // Resolve thread identifier to thread ID
-    let thread_id = resolve_thread_id(&client, pr_number, thread_identifier).await?;
+    let thread_id = resolve_thread_id(&client, pr_number, thread_id, index).await?;
 
     // Fetch review threads
     let threads = client.get_review_threads(pr_number).await?;
@@ -101,7 +113,8 @@ pub async fn show(pr_number: u32, thread_identifier: &str, _detail: Option<&str>
 
 pub async fn reply(
     pr_number: u32,
-    thread_identifier: &str,
+    thread_id: Option<&str>,
+    index: Option<usize>,
     message: &str,
     resolve: bool,
     dry_run: bool,
@@ -113,7 +126,7 @@ pub async fn reply(
     let client = GhClient::new(None);
 
     // Resolve thread identifier to thread ID
-    let thread_id = resolve_thread_id(&client, pr_number, thread_identifier).await?;
+    let thread_id = resolve_thread_id(&client, pr_number, thread_id, index).await?;
     let context_builder = ContextBuilder::new(client.clone());
 
     // Build reply context

@@ -29,15 +29,17 @@ pub async fn run_comment_command(action: &crate::cli::CommentAction) -> Result<(
         crate::cli::CommentAction::Show {
             pr_number,
             thread_id,
+            index,
             detail,
-        } => comment::show(*pr_number, thread_id, detail.as_deref()).await,
+        } => comment::show(*pr_number, thread_id.as_deref(), *index, detail.as_deref()).await,
         crate::cli::CommentAction::Reply {
             pr_number,
             thread_id,
+            index,
             message,
             resolve,
             dry_run,
-        } => comment::reply(*pr_number, thread_id, message, *resolve, *dry_run).await,
+        } => comment::reply(*pr_number, thread_id.as_deref(), *index, message, *resolve, *dry_run).await,
         crate::cli::CommentAction::Draft { action } => run_draft_command(action).await,
     }
 }
@@ -47,9 +49,10 @@ pub async fn run_draft_command(action: &crate::cli::DraftAction) -> Result<()> {
         crate::cli::DraftAction::Add {
             pr_number,
             thread_id,
+            index,
             message,
             resolve,
-        } => draft::add(*pr_number, thread_id, message, *resolve).await,
+        } => draft::add(*pr_number, thread_id.as_deref(), *index, message, *resolve).await,
         crate::cli::DraftAction::Show { pr_number } => draft::show(*pr_number).await,
         crate::cli::DraftAction::Send {
             pr_number,

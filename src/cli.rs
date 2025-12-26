@@ -56,8 +56,12 @@ pub enum CommentAction {
     Show {
         /// Pull request number
         pr_number: u32,
-        /// Thread ID (e.g., PRRT_kwDOQZVIxM5nXEc_) or index with # prefix (e.g., #1, #2)
-        thread_id: String,
+        /// Thread ID (e.g., PRRT_kwDOQZVIxM5nXEc_)
+        #[arg(group = "thread", required = true)]
+        thread_id: Option<String>,
+        /// Thread index (1-based, e.g., 1, 2, 3)
+        #[arg(short = 'i', long, group = "thread")]
+        index: Option<usize>,
         /// Include detail fields (url, bodyHTML, diffHunk, commitOid)
         #[arg(long)]
         detail: Option<String>,
@@ -66,8 +70,12 @@ pub enum CommentAction {
     Reply {
         /// Pull request number
         pr_number: u32,
-        /// Thread ID (e.g., PRRT_kwDOQZVIxM5nXEc_) or index with # prefix (e.g., #1, #2), or "main" for PR-level comment
-        thread_id: String,
+        /// Thread ID (e.g., PRRT_kwDOQZVIxM5nXEc_) or "main" for PR-level comment
+        #[arg(group = "thread", required = true)]
+        thread_id: Option<String>,
+        /// Thread index (1-based, e.g., 1, 2, 3)
+        #[arg(short = 'i', long, group = "thread")]
+        index: Option<usize>,
         /// Reply message
         message: String,
         /// Resolve the thread after replying
@@ -90,8 +98,12 @@ pub enum DraftAction {
     Add {
         /// Pull request number
         pr_number: u32,
-        /// Thread ID (e.g., PRRT_kwDOQZVIxM5nXEc_) or index with # prefix (e.g., #1, #2), or "main" for PR-level comment
-        thread_id: String,
+        /// Thread ID (e.g., PRRT_kwDOQZVIxM5nXEc_) or "main" for PR-level comment
+        #[arg(group = "thread", required = true)]
+        thread_id: Option<String>,
+        /// Thread index (1-based, e.g., 1, 2, 3)
+        #[arg(short = 'i', long, group = "thread")]
+        index: Option<usize>,
         /// Reply message
         message: String,
         /// Resolve the thread when sending
