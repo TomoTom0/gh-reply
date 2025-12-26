@@ -43,17 +43,33 @@ pub async fn resolve_thread_id(
     }
 }
 
-#[allow(unused_variables)]
 pub async fn list(
     client: &GhClient,
     pr_number: u32,
     include_resolved: bool,
-    _label: Option<&str>,
-    _comment_filter: Option<&str>,
-    _detail: Option<&str>,
+    label: Option<&str>,
+    comment_filter: Option<&str>,
+    detail: Option<&str>,
     page: usize,
     per_page: usize,
 ) -> Result<()> {
+    // Check for unimplemented options
+    if label.is_some() {
+        return Err(crate::error::GhReplyError::GhError(
+            "Option --label is not yet implemented".to_string()
+        ));
+    }
+    if comment_filter.is_some() {
+        return Err(crate::error::GhReplyError::GhError(
+            "Option --comment-filter is not yet implemented".to_string()
+        ));
+    }
+    if detail.is_some() {
+        return Err(crate::error::GhReplyError::GhError(
+            "Option --detail is not yet implemented".to_string()
+        ));
+    }
+
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
@@ -87,7 +103,14 @@ pub async fn list(
     Ok(())
 }
 
-pub async fn show(client: &GhClient, pr_number: u32, thread_id: Option<&str>, index: Option<usize>, _detail: Option<&str>) -> Result<()> {
+pub async fn show(client: &GhClient, pr_number: u32, thread_id: Option<&str>, index: Option<usize>, detail: Option<&str>) -> Result<()> {
+    // Check for unimplemented options
+    if detail.is_some() {
+        return Err(crate::error::GhReplyError::GhError(
+            "Option --detail is not yet implemented".to_string()
+        ));
+    }
+
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
