@@ -5,15 +5,12 @@ use crate::github::GhClient;
 use crate::context::ContextBuilder;
 use crate::vars::TemplateExpander;
 
-pub async fn add(pr_number: u32, thread_id: Option<&str>, index: Option<usize>, message: &str, resolve: bool) -> Result<()> {
+pub async fn add(client: &GhClient, pr_number: u32, thread_id: Option<&str>, index: Option<usize>, message: &str, resolve: bool) -> Result<()> {
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
-    // Create GitHub client
-    let client = GhClient::new(None);
-
     // Resolve thread identifier to thread ID
-    let thread_id = super::comment::resolve_thread_id(&client, pr_number, thread_id, index).await?;
+    let thread_id = super::comment::resolve_thread_id(client, pr_number, thread_id, index).await?;
 
     // Load draft store
     let mut store = DraftStore::load()?;
@@ -38,7 +35,7 @@ pub async fn add(pr_number: u32, thread_id: Option<&str>, index: Option<usize>, 
     Ok(())
 }
 
-pub async fn show(pr_number: u32) -> Result<()> {
+pub async fn show(_client: &GhClient, pr_number: u32) -> Result<()> {
     // Load draft store
     let store = DraftStore::load()?;
 
@@ -56,7 +53,7 @@ pub async fn show(pr_number: u32) -> Result<()> {
     Ok(())
 }
 
-pub async fn send(pr_number: u32, force: bool, dry_run: bool) -> Result<()> {
+pub async fn send(client: &GhClient, pr_number: u32, force: bool, dry_run: bool) -> Result<()> {
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
@@ -83,8 +80,7 @@ pub async fn send(pr_number: u32, force: bool, dry_run: bool) -> Result<()> {
         return Ok(());
     }
 
-    // Create GitHub client and context builder
-    let client = GhClient::new(None);
+    // Create context builder
     let context_builder = ContextBuilder::new(client.clone());
 
     // Build base context once (optimization)

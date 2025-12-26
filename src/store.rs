@@ -68,8 +68,17 @@ impl DraftStore {
     }
 
     fn store_path() -> Result<PathBuf> {
-        let current_dir = std::env::current_dir()?;
-        Ok(current_dir.join(Self::STORE_PATH))
+        let output = std::process::Command::new("git")
+            .args(&["rev-parse", "--show-toplevel"])
+            .output()?;
+
+        if !output.status.success() {
+            return Err(crate::error::GhReplyError::StoreError(
+                "Not a git repository. Failed to find .git directory.".to_string(),
+            ));
+        }
+        let git_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(std::path::PathBuf::from(git_root).join(Self::STORE_PATH))
     }
 }
 

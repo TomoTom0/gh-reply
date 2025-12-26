@@ -113,7 +113,7 @@ The following commands are available in both Rust and Node.js implementations:
   - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - `--page <n>` - page number (default: 1)
   - `--per-page <n>` - items per page (default: 10)
-  - Returns: `{ total, page, perPage, items: [{ threadId, path, line, isResolved, comment: {...} }] }`
+  - Returns: `{ total, page, perPage, items: [{ id, path, line, isResolved, comment: {...} }] }`
   - Note: Heavy fields (bodyHTML, diffHunk, commitOid, url) are excluded by default for performance.
 - `comment show <prNumber> <threadId|index> [--detail <cols>]` - show thread details (JSON)
   - `<threadId|index>` - Thread ID or 1-based index (e.g., `1`, `2`, etc.)
