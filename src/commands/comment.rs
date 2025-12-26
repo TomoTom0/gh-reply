@@ -6,10 +6,9 @@ use crate::vars::TemplateExpander;
 /// Resolve thread identifier to thread ID
 /// If the identifier is a number (index), fetch threads and resolve to ID
 /// Otherwise, treat it as a thread ID directly
-pub async fn resolve_thread_id(pr_number: u32, identifier: &str) -> Result<String> {
+pub async fn resolve_thread_id(client: &GhClient, pr_number: u32, identifier: &str) -> Result<String> {
     // Try to parse as a number (index)
     if let Ok(index) = identifier.parse::<usize>() {
-        let client = GhClient::new(None);
         let threads = client.get_review_threads(pr_number).await?;
 
         // Check if index is valid (1-based)
@@ -74,11 +73,13 @@ pub async fn show(pr_number: u32, thread_identifier: &str, _detail: Option<&str>
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
-    // Resolve thread identifier to thread ID
-    let thread_id = resolve_thread_id(pr_number, thread_identifier).await?;
-
-    // Create GitHub client and fetch review threads
+    // Create GitHub client
     let client = GhClient::new(None);
+
+    // Resolve thread identifier to thread ID
+    let thread_id = resolve_thread_id(&client, pr_number, thread_identifier).await?;
+
+    // Fetch review threads
     let threads = client.get_review_threads(pr_number).await?;
 
     // Find the specific thread
@@ -103,11 +104,11 @@ pub async fn reply(
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
-    // Resolve thread identifier to thread ID
-    let thread_id = resolve_thread_id(pr_number, thread_identifier).await?;
-
     // Create GitHub client and context builder
     let client = GhClient::new(None);
+
+    // Resolve thread identifier to thread ID
+    let thread_id = resolve_thread_id(&client, pr_number, thread_identifier).await?;
     let context_builder = ContextBuilder::new(client.clone());
 
     // Build reply context

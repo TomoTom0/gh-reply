@@ -19,9 +19,6 @@ async fn main() -> Result<()> {
         Commands::Comment { action } => {
             commands::run_comment_command(action).await?;
         }
-        Commands::Draft { action } => {
-            commands::run_draft_command(action).await?;
-        }
         Commands::List { state } => {
             commands::run_list_command(state).await?;
         }

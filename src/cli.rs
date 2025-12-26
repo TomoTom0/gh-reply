@@ -19,11 +19,6 @@ pub enum Commands {
         #[command(subcommand)]
         action: CommentAction,
     },
-    /// Draft-related commands
-    Draft {
-        #[command(subcommand)]
-        action: DraftAction,
-    },
     /// List PRs
     List {
         /// PR state: open, closed, merged, all
@@ -81,6 +76,11 @@ pub enum CommentAction {
         /// Dry run - don't actually send
         #[arg(long)]
         dry_run: bool,
+    },
+    /// Draft-related commands
+    Draft {
+        #[command(subcommand)]
+        action: DraftAction,
     },
 }
 

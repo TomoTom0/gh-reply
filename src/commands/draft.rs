@@ -9,8 +9,11 @@ pub async fn add(pr_number: u32, thread_identifier: &str, message: &str, resolve
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
+    // Create GitHub client
+    let client = GhClient::new(None);
+
     // Resolve thread identifier to thread ID
-    let thread_id = super::comment::resolve_thread_id(pr_number, thread_identifier).await?;
+    let thread_id = super::comment::resolve_thread_id(&client, pr_number, thread_identifier).await?;
 
     // Load draft store
     let mut store = DraftStore::load()?;
@@ -116,12 +119,10 @@ pub async fn send(pr_number: u32, force: bool, dry_run: bool) -> Result<()> {
             client.resolve_thread(&thread_id).await?;
         }
 
-        // Remove draft from store
+        // Remove draft from store and save immediately
         store.remove_draft(pr_number, &thread_id);
+        store.save()?;
     }
-
-    // Save updated store
-    store.save()?;
 
     eprintln!("All replies processed.");
     Ok(())

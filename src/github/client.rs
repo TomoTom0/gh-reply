@@ -284,62 +284,86 @@ impl GhClient {
         self.gh_json(&args)
     }
 
-    /// Get PR review threads
+    /// Get PR review threads with pagination
     pub async fn get_review_threads(&self, pr_number: u32) -> Result<Vec<ReviewThread>> {
         let (owner, name) = self.get_repo_info()?;
+        let mut result = Vec::new();
+        let mut cursor: Option<String> = None;
+        let mut has_next_page = true;
 
-        let query = format!(
-            r#"{{
-                repository(owner: "{}", name: "{}") {{
-                    pullRequest(number: {}) {{
-                        reviewThreads(first: 100) {{
-                            nodes {{
-                                id
-                                isResolved
-                                path
-                                line
-                                diffSide
-                                comments(first: 1) {{
-                                    nodes {{
-                                        body
-                                        author {{ login }}
+        while has_next_page {
+            let after_clause = cursor.as_ref()
+                .map(|c| format!(r#", after: "{}""#, c))
+                .unwrap_or_default();
+
+            let query = format!(
+                r#"{{
+                    repository(owner: "{}", name: "{}") {{
+                        pullRequest(number: {}) {{
+                            reviewThreads(first: 100{}) {{
+                                pageInfo {{
+                                    hasNextPage
+                                    endCursor
+                                }}
+                                nodes {{
+                                    id
+                                    isResolved
+                                    path
+                                    line
+                                    diffSide
+                                    comments(first: 1) {{
+                                        nodes {{
+                                            body
+                                            author {{ login }}
+                                        }}
                                     }}
                                 }}
                             }}
                         }}
                     }}
-                }}
-            }}"#,
-            owner, name, pr_number
-        );
+                }}"#,
+                owner, name, pr_number, after_clause
+            );
 
-        let response = self.gh_graphql(&query, None).await?;
+            let response = self.gh_graphql(&query, None).await?;
 
-        let threads = response["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
-            .as_array()
-            .ok_or_else(|| GhReplyError::GhError("Invalid response structure".to_string()))?;
+            let review_threads = &response["data"]["repository"]["pullRequest"]["reviewThreads"];
 
-        let mut result = Vec::new();
-        for thread in threads {
-            let id = thread["id"].as_str().unwrap_or("").to_string();
-            let path = thread["path"].as_str().unwrap_or("").to_string();
-            let line = thread["line"].as_u64().map(|l| l as u32);
-            let diff_side = thread["diffSide"].as_str().map(|s| s.to_string());
-            let is_resolved = thread["isResolved"].as_bool().unwrap_or(false);
+            // Get pagination info
+            let page_info = &review_threads["pageInfo"];
+            has_next_page = page_info["hasNextPage"].as_bool().unwrap_or(false);
+            cursor = page_info["endCursor"].as_str().map(|s| s.to_string());
 
-            let body = thread["comments"]["nodes"][0]["body"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
+            // Process threads
+            let threads = review_threads["nodes"]
+                .as_array()
+                .ok_or_else(|| GhReplyError::GhError("Invalid response structure".to_string()))?;
 
-            result.push(ReviewThread {
-                id,
-                path,
-                line,
-                diff_side,
-                body,
-                is_resolved,
-            });
+            for thread in threads {
+                let id = thread["id"].as_str().unwrap_or("").to_string();
+                let path = thread["path"].as_str().unwrap_or("").to_string();
+                let line = thread["line"].as_u64().map(|l| l as u32);
+                let diff_side = thread["diffSide"].as_str().map(|s| s.to_string());
+                let is_resolved = thread["isResolved"].as_bool().unwrap_or(false);
+
+                let body = thread.get("comments")
+                    .and_then(|c| c.get("nodes"))
+                    .and_then(|n| n.as_array())
+                    .and_then(|nodes| nodes.get(0))
+                    .and_then(|comment| comment.get("body"))
+                    .and_then(|b| b.as_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                result.push(ReviewThread {
+                    id,
+                    path,
+                    line,
+                    diff_side,
+                    body,
+                    is_resolved,
+                });
+            }
         }
 
         Ok(result)

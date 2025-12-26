@@ -25,7 +25,7 @@ impl ContextBuilder {
         let auth_user = self.client.get_authenticated_user()?;
 
         // Get local commit hash
-        let local_commit = Self::get_local_commit().unwrap_or_default();
+        let local_commit = Self::get_local_commit().await.unwrap_or_default();
 
         // Determine username with fallback
         let username = if !auth_user.is_empty() {
@@ -49,12 +49,13 @@ impl ContextBuilder {
         })
     }
 
-    fn get_local_commit() -> Option<String> {
-        use std::process::Command;
+    async fn get_local_commit() -> Option<String> {
+        use tokio::process::Command;
 
         let output = Command::new("git")
             .args(&["rev-parse", "HEAD"])
             .output()
+            .await
             .ok()?;
 
         if output.status.success() {
@@ -94,8 +95,15 @@ impl ContextBuilder {
 
         match self.client.gh_graphql(&query, None).await {
             Ok(response) => {
-                let author = response["data"]["node"]["comments"]["nodes"][0]["author"]["login"]
-                    .as_str();
+                let author = response.get("data")
+                    .and_then(|d| d.get("node"))
+                    .and_then(|n| n.get("comments"))
+                    .and_then(|c| c.get("nodes"))
+                    .and_then(|nodes| nodes.as_array())
+                    .and_then(|nodes| nodes.get(0))
+                    .and_then(|comment| comment.get("author"))
+                    .and_then(|author| author.get("login"))
+                    .and_then(|login| login.as_str());
                 Ok(author.unwrap_or(target).to_string())
             }
             Err(_) => {

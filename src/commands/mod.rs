@@ -38,6 +38,7 @@ pub async fn run_comment_command(action: &crate::cli::CommentAction) -> Result<(
             resolve,
             dry_run,
         } => comment::reply(*pr_number, thread_id, message, *resolve, *dry_run).await,
+        crate::cli::CommentAction::Draft { action } => run_draft_command(action).await,
     }
 }
 
