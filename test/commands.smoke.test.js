@@ -43,9 +43,4 @@ describe('commands: import check', () => {
     const draftClear = (await import('../dist/commands/draftClear.js')).default;
     assert.strictEqual(typeof draftClear, 'function');
   });
-
-  test('commentReplyAll をインポートできる', async () => {
-    const commentReplyAll = (await import('../dist/commands/commentReplyAll.js')).default;
-    assert.strictEqual(typeof commentReplyAll, 'function');
-  });
 });

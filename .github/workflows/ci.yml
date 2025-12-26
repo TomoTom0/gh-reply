@@ -7,22 +7,14 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  rust:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - name: Install deps
-        run: npm ci
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Build
-        run: npm run build
+        run: cargo build --release
       - name: Run tests
-        run: npm run test
+        run: cargo test
 
