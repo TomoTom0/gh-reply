@@ -43,7 +43,9 @@ pub async fn resolve_thread_id(
     }
 }
 
+#[allow(unused_variables)]
 pub async fn list(
+    client: &GhClient,
     pr_number: u32,
     include_resolved: bool,
     _label: Option<&str>,
@@ -55,8 +57,7 @@ pub async fn list(
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
-    // Create GitHub client and fetch review threads
-    let client = GhClient::new(None);
+    // Fetch review threads
     let threads = client.get_review_threads(pr_number).await?;
 
     // Filter threads based on options
@@ -86,15 +87,12 @@ pub async fn list(
     Ok(())
 }
 
-pub async fn show(pr_number: u32, thread_id: Option<&str>, index: Option<usize>, _detail: Option<&str>) -> Result<()> {
+pub async fn show(client: &GhClient, pr_number: u32, thread_id: Option<&str>, index: Option<usize>, _detail: Option<&str>) -> Result<()> {
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
-    // Create GitHub client
-    let client = GhClient::new(None);
-
     // Resolve thread identifier to thread ID
-    let thread_id = resolve_thread_id(&client, pr_number, thread_id, index).await?;
+    let thread_id = resolve_thread_id(client, pr_number, thread_id, index).await?;
 
     // Fetch review threads
     let threads = client.get_review_threads(pr_number).await?;
@@ -112,6 +110,7 @@ pub async fn show(pr_number: u32, thread_id: Option<&str>, index: Option<usize>,
 }
 
 pub async fn reply(
+    client: &GhClient,
     pr_number: u32,
     thread_id: Option<&str>,
     index: Option<usize>,
@@ -122,11 +121,8 @@ pub async fn reply(
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
 
-    // Create GitHub client and context builder
-    let client = GhClient::new(None);
-
     // Resolve thread identifier to thread ID
-    let thread_id = resolve_thread_id(&client, pr_number, thread_id, index).await?;
+    let thread_id = resolve_thread_id(client, pr_number, thread_id, index).await?;
     let context_builder = ContextBuilder::new(client.clone());
 
     // Build reply context

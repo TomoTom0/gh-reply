@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::github::GhClient;
 
-pub async fn list(state: &str) -> Result<()> {
+pub async fn list(client: &GhClient, state: &str) -> Result<()> {
     // Validate state parameter
     let valid_states = ["open", "closed", "merged", "all"];
     let state_value = if valid_states.contains(&state) {
@@ -12,9 +12,6 @@ pub async fn list(state: &str) -> Result<()> {
 
     // Ensure gh CLI is available
     GhClient::ensure_gh_available()?;
-
-    // Create GitHub client
-    let client = GhClient::new(None);
 
     // Execute gh pr list command
     let result = client.list_prs(state_value).await?;

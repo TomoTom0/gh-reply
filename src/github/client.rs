@@ -395,12 +395,16 @@ impl GhClient {
 
     /// Resolve a review thread
     pub async fn resolve_thread(&self, thread_id: &str) -> Result<()> {
-        let mutation = format!(
-            r#"mutation {{ resolveReviewThread(input: {{ threadId: "{}" }}) {{ thread {{ id }} }} }}"#,
-            thread_id
-        );
+        let mutation = r#"mutation($threadId: ID!) {
+            resolveReviewThread(input: {threadId: $threadId}) {
+                thread { id }
+            }
+        }"#;
+        let variables = serde_json::json!({
+            "threadId": thread_id
+        });
 
-        self.gh_graphql(&mutation, None).await?;
+        self.gh_graphql(mutation, Some(variables)).await?;
         eprintln!("Resolved thread {}", thread_id);
         Ok(())
     }

@@ -79,21 +79,19 @@ impl ContextBuilder {
         }
 
         // Try to get the author of the first comment in the thread
-        let query = format!(
-            r#"{{
-                node(id: "{}") {{
-                    __typename
-                    ... on PullRequestReviewThread {{
-                        id
-                        isResolved
-                        comments(first:1) {{ nodes {{ databaseId author {{ login }} body }} }}
-                    }}
-                }}
-            }}"#,
-            target
-        );
+        let query = r#"query($id: ID!) {
+            node(id: $id) {
+                __typename
+                ... on PullRequestReviewThread {
+                    id
+                    isResolved
+                    comments(first:1) { nodes { databaseId author { login } body } }
+                }
+            }
+        }"#;
+        let variables = serde_json::json!({ "id": target });
 
-        match self.client.gh_graphql(&query, None).await {
+        match self.client.gh_graphql(query, Some(variables)).await {
             Ok(response) => {
                 let author = response.get("data")
                     .and_then(|d| d.get("node"))

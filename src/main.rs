@@ -15,12 +15,14 @@ use error::Result;
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    let client = github::GhClient::new(cli.repo);
+
     match &cli.command {
         Commands::Comment { action } => {
-            commands::run_comment_command(action).await?;
+            commands::run_comment_command(&client, action).await?;
         }
         Commands::List { state } => {
-            commands::run_list_command(state).await?;
+            commands::run_list_command(&client, state).await?;
         }
     }
 
