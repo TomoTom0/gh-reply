@@ -37,3 +37,8 @@ ehthumbs.db
 
 # Draft store (local, do not commit)
 /.git/info/gh-reply-drafts.json
+
+
+# Added by cargo
+
+/target

@@ -1,0 +1,44 @@
+#!/bin/bash
+# Test mock for gh CLI
+# This script mimics gh CLI behavior for testing purposes
+
+case "$1" in
+  "--version")
+    echo "gh version 2.0.0 (test mock)"
+    exit 0
+    ;;
+  "auth")
+    if [ "$2" == "status" ]; then
+      echo "Logged in to github.com as testuser"
+      exit 0
+    fi
+    ;;
+  "api")
+    if [ "$2" == "user" ]; then
+      echo '{"login": "testuser"}'
+      exit 0
+    elif [ "$2" == "graphql" ]; then
+      # Simple GraphQL mock - return success
+      echo '{"data": {"test": "success"}}'
+      exit 0
+    fi
+    ;;
+  "repo")
+    if [ "$2" == "view" ]; then
+      echo '{"owner": {"login": "test-owner"}, "name": "test-repo"}'
+      exit 0
+    fi
+    ;;
+  "pr")
+    if [ "$2" == "list" ]; then
+      echo '[{"number": 1, "title": "Test PR 1", "state": "OPEN"}]'
+      exit 0
+    elif [ "$2" == "view" ]; then
+      echo '{"title": "Test PR", "author": {"login": "testuser"}, "headRefName": "feature", "baseRefName": "main"}'
+      exit 0
+    fi
+    ;;
+esac
+
+echo "Mock gh: unhandled command: $*" >&2
+exit 1
