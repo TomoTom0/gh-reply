@@ -84,7 +84,6 @@ pub async fn list(
 
     // Apply pagination
     let start = (page - 1) * per_page;
-    let end = start + per_page;
     let paginated_threads: Vec<_> = filtered_threads
         .into_iter()
         .skip(start)
@@ -170,7 +169,7 @@ pub async fn reply(
     }
 
     // Post the reply
-    client.post_reply(pr_number, &thread_id, &expanded_message).await?;
+    client.post_reply(&thread_id, &expanded_message).await?;
 
     // Resolve thread if requested
     if resolve {

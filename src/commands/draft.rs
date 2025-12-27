@@ -108,7 +108,7 @@ pub async fn send(client: &GhClient, pr_number: u32, force: bool, dry_run: bool)
         let expanded_message = expander.expand(&draft.body)?;
 
         // Post the reply
-        client.post_reply(pr_number, &thread_id, &expanded_message).await?;
+        client.post_reply(&thread_id, &expanded_message).await?;
 
         // Resolve thread if requested in draft
         if draft.resolve.unwrap_or(false) {
