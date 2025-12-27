@@ -2,11 +2,55 @@
 
 CLI to manage draft replies to GitHub PR review comments.
 
-Prerequisites
+## Rust Implementation
+
+This project now includes a Rust implementation alongside the original Node.js version. The Rust version offers significant performance improvements and a much smaller binary size.
+
+### Why Rust?
+
+- **Smaller binary**: ~2.2MB (vs ~43MB debug build in Node.js)
+- **Faster execution**: Native performance without JIT warmup
+- **Single binary**: No Node.js runtime required
+
+### Prerequisites (Rust)
+- `gh` (GitHub CLI) installed and authenticated (`gh auth login`)
+- Rust toolchain (install from https://rustup.rs/)
+
+### Building (Rust)
+
+```bash
+# Debug build
+cargo build
+
+# Release build (optimized for size)
+cargo build --release
+```
+
+The optimized release build is configured with:
+- `opt-level = "z"` - Optimize for binary size
+- `lto = true` - Link-time optimization
+- `codegen-units = 1` - Better optimization
+- `strip = true` - Strip debug symbols
+
+### Running (Rust)
+
+```bash
+# Using debug build
+cargo run -- list --help
+
+# Using release build
+./target/release/gh-reply list --help
+```
+
+## Node.js Implementation
+
+The original Node.js implementation is still available and fully supported.
+
+### Prerequisites (Node.js)
 - `gh` (GitHub CLI) installed and authenticated (`gh auth login`).
 - Node.js >= 18 (ESM support)
 
-Note on ESM
+### Note on ESM
 - This project has migrated to ECMAScript Modules (ESM). The built CLI is an ESM bundle in `dist/`. The `bin/gh-reply.js` shim dynamically imports the ESM bundle so you can run `node ./bin/gh-reply.js` after `npm run build`.
 
 Environment Variables
@@ -26,12 +70,11 @@ Contributing
 
 Development scripts (in `scripts/`) are for maintainers only. See `tools/README.scripts.md` for details.
 
-Quick start
+### Quick start (Node.js)
 - Build: `npm run build`
 - Run locally (shim): `node node_modules/.bin/gh-reply list --repo owner/name`
 
-Installation
-------------
+### Installation (Node.js)
 
 Install and build locally:
 
@@ -41,8 +84,7 @@ npm run setup
 
 This runs `npm install` and builds the TypeScript sources.
 
-Running the CLI
----------------
+### Running the CLI (Node.js)
 
 After building the project (`npm run build`), run the CLI shim:
 
@@ -56,8 +98,11 @@ Or use the built JS directly (Node must support ESM):
 npm run dev -- --help
 ```
 
+## Commands
 
-Commands
+The following commands are available in both Rust and Node.js implementations:
+
+### Available Commands
 - `list [--repo owner/name] [--state <state>]` - list PRs (JSON)
   - `--state`: open, closed, merged, all (default: open)
 - `show <prNumber> [--repo owner/name]` - show PR details (JSON)
@@ -68,13 +113,16 @@ Commands
   - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - `--page <n>` - page number (default: 1)
   - `--per-page <n>` - items per page (default: 10)
-  - Returns: `{ total, page, perPage, items: [{ threadId, path, line, isResolved, comment: {...} }] }`
+  - Returns: `{ total, page, perPage, items: [{ id, path, line, isResolved, comment: {...} }] }`
   - Note: Heavy fields (bodyHTML, diffHunk, commitOid, url) are excluded by default for performance.
-- `comment show <prNumber> <threadId> [--detail <cols>]` - show thread details (JSON)
+- `comment show <prNumber> <threadId|index> [--detail <cols>]` - show thread details (JSON)
+  - `<threadId|index>` - Thread ID or 1-based index (e.g., `1`, `2`, etc.)
   - `--detail <cols>` - include fields: `url`, `bodyHTML`, `diffHunk`, `commitOid`
   - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
-- `comment reply <prNumber> <threadId|main> <body> [-r|--resolve] [--dry-run]` - reply to review thread (immediate send). Status messages printed to stderr.
-- `comment draft <prNumber> <threadId|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
+- `comment reply <prNumber> <threadId|index|main> <body> [-r|--resolve] [--dry-run]` - reply to review thread (immediate send). Status messages printed to stderr.
+  - `<threadId|index|main>` - Thread ID, 1-based index, or `main` for PR-level comment
+- `comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
+  - `<threadId|index|main>` - Thread ID, 1-based index, or `main` for PR-level comment
 - `comment draft <prNumber> --show` - show saved drafts (JSON)
 - `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
 - `comment draft <prNumber> --clear` - clear all drafts
@@ -83,9 +131,11 @@ Storage
 - Drafts are stored in `.git/info/gh-reply-drafts.json` in the repository.
 
 Notes
-- Thread IDs used are GraphQL Node IDs (base64). Use `comment list` to get them.
+- Thread identifiers can be either:
+  - GraphQL Node IDs (base64, e.g., `PRRT_kwDOQY1Lo85irSuR`) - use `comment list` to get them
+  - 1-based index numbers (e.g., `1`, `2`, `3`) - corresponds to the order in `comment list` output (includes resolved threads)
 - `comment reply` immediately sends the reply to the specified thread.
-- `comment draft <prNumber> <threadId> <body>` saves a draft locally; use `comment draft <prNumber> --send` to send all saved drafts.
+- `comment draft <prNumber> <threadId|index> <body>` saves a draft locally; use `comment draft <prNumber> --send` to send all saved drafts.
 - Both reply methods will `resolveReviewThread` when `--resolve` or `-r` is specified.
 
 返信（レビューコメントへの直接返信）
@@ -95,21 +145,30 @@ Notes
 
 ### 即座に返信する場合
 
-- `gh-reply comment list <prNumber>` — PR の未解決スレッドを一覧表示します。出力される `id` は GraphQL の Node ID（例: `PRRT_kw...`）です。
-- `gh-reply comment reply <prNumber> <threadId|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に即座に返信します。`-r` を付けるとスレッドを「解決（resolve）」します。
+- `gh-reply comment list <prNumber>` — PR のスレッドを一覧表示します。出力される `id` は GraphQL の Node ID（例: `PRRT_kw...`）です。
+- `gh-reply comment reply <prNumber> <threadId|index|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に即座に返信します。
+  - `<threadId|index|main>` には、Thread ID、1から始まるインデックス番号、または `main` を指定できます
+  - `-r` を付けるとスレッドを「解決（resolve）」します
 
 ### 下書きを使う場合
 
-- `gh-reply comment draft <prNumber> <threadId|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に対する下書きを保存します。`-r` を付けると送信後にそのスレッドを「解決（resolve）」します。
+- `gh-reply comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に対する下書きを保存します。
+  - `<threadId|index|main>` には、Thread ID、1から始まるインデックス番号、または `main` を指定できます
+  - `-r` を付けると送信後にそのスレッドを「解決（resolve）」します
 - `gh-reply comment draft <prNumber> --show` — 下書きを確認します。
 - `gh-reply comment draft <prNumber> --send [-f|--force] [--dry-run]` — 保存済みの全下書きを送信します。`-f` は本文が空でも強制的に解決を行います。
 - `gh-reply comment draft <prNumber> --clear` — 全下書きをクリアします。
+
+### スレッドの指定方法
+
+- **Thread ID（GraphQL Node ID）**: `PRRT_kwDOQY1Lo85irSuR` のような形式で指定
+- **インデックス番号**: `1`, `2`, `3` など、1から始まる番号で指定（`comment list` の表示順に対応、resolved済みも含む）
 
 ### 環境変数
 
 - `GHREPLY_RESOLVE=false` — `--resolve` オプションを無効化します。誤ってスレッドを解決してしまうのを防ぎます。デフォルトは有効です。
 
-GraphQL Node ID を直接使うことで、該当スレッドを特定して返信できます。ツールは可能な限りスレッドへ直接返信することを試みます（GraphQL/REST の状況に依存します）。
+GraphQL Node ID またはインデックス番号を使うことで、該当スレッドを特定して返信できます。ツールは可能な限りスレッドへ直接返信することを試みます（GraphQL/REST の状況に依存します）。
 
 フォールバック動作
 - 一部の環境や API の差異により、スレッドへ直接返信が行えない場合があります（ID の種類や権限による制約など）。その場合、本ツールは安全策として「PR 全体へのコメントで対象者をメンション」し、続けて GraphQL でスレッドを `resolve` します。これにより、相手に返信が伝わり、スレッドは解決状態になります。
