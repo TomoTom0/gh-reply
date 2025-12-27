@@ -56,8 +56,40 @@ The original Node.js implementation is still available and fully supported.
 Environment Variables
 - `GHREPLY_RESOLVE`: Set to `false` to disable the `--resolve` option. This prevents accidentally resolving review threads. Default is enabled.
 
-Publishing
------------
+GitHub CLI Extension
+--------------------
+
+### Installing as a GitHub CLI Extension
+
+You can install `gh-reply` as a GitHub CLI extension:
+
+```bash
+gh extension install TomoTom0/gh-reply
+```
+
+Once installed, you can use it directly with the `gh` command:
+
+```bash
+gh reply list --repo owner/name
+gh reply comment list 42
+```
+
+### Creating a Release
+
+To create a new release:
+
+1. Update the version in `Cargo.toml` and `manifest.yml`
+2. Create and push a version tag:
+   ```bash
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+3. The GitHub Actions workflow will automatically:
+   - Build binaries for Linux, macOS (Intel/ARM), and Windows
+   - Create a GitHub release with all platform binaries attached
+
+Publishing to npm
+-----------------
 
 To publish to npm from a release tag, create a tag like `v0.1.0` and push it. The GitHub Actions `Release` workflow will publish the package to npm when a tag matching `v*.*.*` is pushed. Ensure you have added `NPM_TOKEN` to the repository secrets for publishing.
 
@@ -100,7 +132,11 @@ npm run dev -- --help
 
 ## Commands
 
-The following commands are available in both Rust and Node.js implementations:
+The following commands are available in both Rust and Node.js implementations.
+
+**Note on `comment draft` syntax:**
+- **Node.js version**: Uses flags (`--show`, `--send`, `--clear`)
+- **Rust version**: Uses subcommands (`show`, `send`, `clear`, `add`)
 
 ### Available Commands
 - `list [--repo owner/name] [--state <state>]` - list PRs (JSON)
@@ -121,11 +157,16 @@ The following commands are available in both Rust and Node.js implementations:
   - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
 - `comment reply <prNumber> <threadId|index|main> <body> [-r|--resolve] [--dry-run]` - reply to review thread (immediate send). Status messages printed to stderr.
   - `<threadId|index|main>` - Thread ID, 1-based index, or `main` for PR-level comment
-- `comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
-  - `<threadId|index|main>` - Thread ID, 1-based index, or `main` for PR-level comment
-- `comment draft <prNumber> --show` - show saved drafts (JSON)
-- `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
-- `comment draft <prNumber> --clear` - clear all drafts
+- **Draft commands (Node.js version):**
+  - `comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply
+  - `comment draft <prNumber> --show` - show saved drafts (JSON)
+  - `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts
+  - `comment draft <prNumber> --clear` - clear all drafts
+- **Draft commands (Rust version):**
+  - `comment draft add <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply
+  - `comment draft show <prNumber>` - show saved drafts (JSON)
+  - `comment draft send <prNumber> [-f|--force] [--dry-run]` - send all saved drafts
+  - `comment draft clear <prNumber>` - clear all drafts
 
 Storage
 - Drafts are stored in `.git/info/gh-reply-drafts.json` in the repository.
