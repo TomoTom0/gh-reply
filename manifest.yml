@@ -1,5 +1,5 @@
 name: gh-reply
 owner: TomoTom0
 description: CLI to manage draft replies to GitHub PR review comments
-version: 0.1.1
+version: 0.1.2
 repository: TomoTom0/gh-reply
