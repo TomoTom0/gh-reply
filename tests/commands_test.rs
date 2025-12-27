@@ -59,9 +59,7 @@ mod show_command_tests {
         // show command internally calls GhClient::show_pr
         // which uses gh-mock via GH_COMMAND
         let result = gh_reply::commands::show::show(&client, 123).await;
-        // May fail if mock doesn't return proper JSON response
-        // but should not panic
-        let _ = result;
+        assert!(result.is_ok());
     }
 }
 

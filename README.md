@@ -81,8 +81,8 @@ To create a new release:
 1. Update the version in `Cargo.toml` and `manifest.yml`
 2. Create and push a version tag:
    ```bash
-   git tag v0.1.2
-   git push origin v0.1.2
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
    ```
 3. The GitHub Actions workflow will automatically:
    - Build binaries for Linux, macOS (Intel/ARM), and Windows
