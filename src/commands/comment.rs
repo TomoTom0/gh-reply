@@ -169,7 +169,7 @@ pub async fn reply(
     }
 
     // Post the reply
-    client.post_reply(pr_number, &thread_id, &expanded_message).await?;
+    client.post_reply(&thread_id, &expanded_message).await?;
 
     // Resolve thread if requested
     if resolve {

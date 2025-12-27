@@ -32,11 +32,6 @@ impl TemplateExpander {
         Self { vars }
     }
 
-    #[allow(dead_code)]
-    pub fn add_var(&mut self, key: impl Into<String>, value: impl Into<String>) {
-        self.vars.insert(key.into(), value.into());
-    }
-
     pub fn expand(&self, template: &str) -> Result<String> {
         // Allow whitespace around variable names: {{ var }} or {{var}}
         let re = Regex::new(r"\{\{\s*(\w+)\s*\}\}")
@@ -64,11 +59,19 @@ impl Default for TemplateExpander {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+
+    fn create_expander(vars: Vec<(&str, &str)>) -> TemplateExpander {
+        let mut vars_map = HashMap::new();
+        for (k, v) in vars {
+            vars_map.insert(k.to_string(), v.to_string());
+        }
+        TemplateExpander { vars: vars_map }
+    }
 
     #[test]
     fn test_expand_simple_variable() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("name", "World");
+        let expander = create_expander(vec![("name", "World")]);
 
         let result = expander.expand("Hello {{name}}!").unwrap();
         assert_eq!(result, "Hello World!");
@@ -76,9 +79,7 @@ mod tests {
 
     #[test]
     fn test_expand_multiple_variables() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("greeting", "Hello");
-        expander.add_var("name", "World");
+        let expander = create_expander(vec![("greeting", "Hello"), ("name", "World")]);
 
         let result = expander.expand("{{greeting}} {{name}}!").unwrap();
         assert_eq!(result, "Hello World!");
@@ -86,8 +87,7 @@ mod tests {
 
     #[test]
     fn test_expand_with_whitespace() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("name", "World");
+        let expander = create_expander(vec![("name", "World")]);
 
         // Test various whitespace patterns
         assert_eq!(expander.expand("{{ name }}").unwrap(), "World");
@@ -106,9 +106,7 @@ mod tests {
 
     #[test]
     fn test_expand_same_variable_multiple_times() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("x", "1");
-        expander.add_var("result", "2");
+        let expander = create_expander(vec![("x", "1"), ("result", "2")]);
 
         let result = expander.expand("{{x}} + {{x}} = {{result}}").unwrap();
         assert_eq!(result, "1 + 1 = 2");
@@ -116,8 +114,7 @@ mod tests {
 
     #[test]
     fn test_expand_empty_template() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("name", "World");
+        let expander = create_expander(vec![("name", "World")]);
 
         let result = expander.expand("").unwrap();
         assert_eq!(result, "");
@@ -133,9 +130,7 @@ mod tests {
 
     #[test]
     fn test_expand_with_underscore() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("first_name", "John");
-        expander.add_var("last_name", "Doe");
+        let expander = create_expander(vec![("first_name", "John"), ("last_name", "Doe")]);
 
         let result = expander.expand("{{first_name}} {{last_name}}").unwrap();
         assert_eq!(result, "John Doe");
@@ -143,9 +138,7 @@ mod tests {
 
     #[test]
     fn test_expand_with_numbers() {
-        let mut expander = TemplateExpander::new();
-        expander.add_var("var1", "a");
-        expander.add_var("var2", "b");
+        let expander = create_expander(vec![("var1", "a"), ("var2", "b")]);
 
         let result = expander.expand("{{var1}} {{var2}}").unwrap();
         assert_eq!(result, "a b");

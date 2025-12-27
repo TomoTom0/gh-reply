@@ -372,7 +372,6 @@ impl GhClient {
     /// Post a reply to a review thread
     pub async fn post_reply(
         &self,
-        _pr_number: u32,
         thread_id: &str,
         body: &str,
     ) -> Result<()> {

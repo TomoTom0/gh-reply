@@ -42,14 +42,6 @@ impl DraftStore {
             .insert(thread_id.to_string(), draft);
     }
 
-    #[allow(dead_code)]
-    pub fn get_draft(&self, pr_number: u32, thread_id: &str) -> Option<&DraftEntry> {
-        let pr_key = pr_number.to_string();
-        self.drafts
-            .get(&pr_key)
-            .and_then(|threads| threads.get(thread_id))
-    }
-
     pub fn get_all_drafts(&self, pr_number: u32) -> HashMap<String, DraftEntry> {
         let pr_key = pr_number.to_string();
         self.drafts.get(&pr_key).cloned().unwrap_or_default()
@@ -110,7 +102,9 @@ mod tests {
 
         store.add_draft(123, "thread-1", draft.clone());
 
-        let retrieved = store.get_draft(123, "thread-1");
+        let all_drafts = store.get_all_drafts(123);
+        assert_eq!(all_drafts.len(), 1);
+        let retrieved = all_drafts.get("thread-1");
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().body, "Test message");
     }
@@ -119,8 +113,8 @@ mod tests {
     fn test_get_nonexistent_draft() {
         let store = DraftStore::default();
 
-        let result = store.get_draft(999, "nonexistent");
-        assert!(result.is_none());
+        let all_drafts = store.get_all_drafts(999);
+        assert!(all_drafts.is_empty());
     }
 
     #[test]
@@ -174,8 +168,8 @@ mod tests {
         assert!(removed);
 
         // Verify it's gone
-        let result = store.get_draft(123, "thread-1");
-        assert!(result.is_none());
+        let all_drafts = store.get_all_drafts(123);
+        assert!(!all_drafts.contains_key("thread-1"));
     }
 
     #[test]
