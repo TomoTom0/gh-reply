@@ -42,6 +42,7 @@ impl DraftStore {
             .insert(thread_id.to_string(), draft);
     }
 
+    #[allow(dead_code)]
     pub fn get_draft(&self, pr_number: u32, thread_id: &str) -> Option<&DraftEntry> {
         let pr_key = pr_number.to_string();
         self.drafts

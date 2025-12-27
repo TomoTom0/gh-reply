@@ -32,6 +32,7 @@ impl TemplateExpander {
         Self { vars }
     }
 
+    #[allow(dead_code)]
     pub fn add_var(&mut self, key: impl Into<String>, value: impl Into<String>) {
         self.vars.insert(key.into(), value.into());
     }
