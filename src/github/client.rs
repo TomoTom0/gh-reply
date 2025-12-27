@@ -430,6 +430,27 @@ impl GhClient {
         self.gh_json(&args)
     }
 
+    /// Show PR details
+    pub async fn show_pr(&self, pr_number: u32) -> Result<Value> {
+        let pr_str = pr_number.to_string();
+        let mut args = vec![
+            "pr",
+            "view",
+            &pr_str,
+            "--json",
+            "title,body,author,headRefName,baseRefName,headRefOid,url",
+        ];
+
+        let repo_arg;
+        if let Some(repo) = &self.repo {
+            repo_arg = repo.clone();
+            args.push("--repo");
+            args.push(&repo_arg);
+        }
+
+        self.gh_json(&args)
+    }
+
 }
 
 #[cfg(test)]

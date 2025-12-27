@@ -1,6 +1,7 @@
 pub mod comment;
 pub mod draft;
 pub mod list;
+pub mod show;
 
 use crate::error::Result;
 use crate::github::GhClient;
@@ -67,4 +68,8 @@ pub async fn run_draft_command(client: &GhClient, action: &crate::cli::DraftActi
 
 pub async fn run_list_command(client: &GhClient, state: &str) -> Result<()> {
     list::list(client, state).await
+}
+
+pub async fn run_show_command(client: &GhClient, pr_number: u32) -> Result<()> {
+    show::show(client, pr_number).await
 }

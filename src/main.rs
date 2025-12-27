@@ -24,6 +24,9 @@ async fn main() -> Result<()> {
         Commands::List { state } => {
             commands::run_list_command(&client, state).await?;
         }
+        Commands::Show { pr_number } => {
+            commands::run_show_command(&client, *pr_number).await?;
+        }
     }
 
     Ok(())

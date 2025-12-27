@@ -132,7 +132,11 @@ npm run dev -- --help
 
 ## Commands
 
-The following commands are available in both Rust and Node.js implementations:
+The following commands are available in both Rust and Node.js implementations.
+
+**Note on `comment draft` syntax:**
+- **Node.js version**: Uses flags (`--show`, `--send`, `--clear`)
+- **Rust version**: Uses subcommands (`show`, `send`, `clear`, `add`)
 
 ### Available Commands
 - `list [--repo owner/name] [--state <state>]` - list PRs (JSON)
@@ -153,11 +157,16 @@ The following commands are available in both Rust and Node.js implementations:
   - Returns: `{ threadId, path, line, isResolved, comments: [...] }`
 - `comment reply <prNumber> <threadId|index|main> <body> [-r|--resolve] [--dry-run]` - reply to review thread (immediate send). Status messages printed to stderr.
   - `<threadId|index|main>` - Thread ID, 1-based index, or `main` for PR-level comment
-- `comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply (use `main` to post PR-level comment). Status messages printed to stderr.
-  - `<threadId|index|main>` - Thread ID, 1-based index, or `main` for PR-level comment
-- `comment draft <prNumber> --show` - show saved drafts (JSON)
-- `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts and optionally resolve. `--dry-run` can be used to preview actions without making any changes. Status messages printed to stderr.
-- `comment draft <prNumber> --clear` - clear all drafts
+- **Draft commands (Node.js version):**
+  - `comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply
+  - `comment draft <prNumber> --show` - show saved drafts (JSON)
+  - `comment draft <prNumber> --send [-f|--force] [--dry-run]` - send all saved drafts
+  - `comment draft <prNumber> --clear` - clear all drafts
+- **Draft commands (Rust version):**
+  - `comment draft add <prNumber> <threadId|index|main> <body> [-r|--resolve]` - add a draft reply
+  - `comment draft show <prNumber>` - show saved drafts (JSON)
+  - `comment draft send <prNumber> [-f|--force] [--dry-run]` - send all saved drafts
+  - `comment draft clear <prNumber>` - clear all drafts
 
 Storage
 - Drafts are stored in `.git/info/gh-reply-drafts.json` in the repository.

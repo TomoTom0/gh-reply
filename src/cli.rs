@@ -25,6 +25,11 @@ pub enum Commands {
         #[arg(long, default_value = "open")]
         state: String,
     },
+    /// Show PR details
+    Show {
+        /// Pull request number
+        pr_number: u32,
+    },
 }
 
 #[derive(Subcommand, Debug)]
