@@ -84,7 +84,6 @@ pub async fn list(
 
     // Apply pagination
     let start = (page - 1) * per_page;
-    let end = start + per_page;
     let paginated_threads: Vec<_> = filtered_threads
         .into_iter()
         .skip(start)
