@@ -104,9 +104,8 @@ mod tests {
 
         let all_drafts = store.get_all_drafts(123);
         assert_eq!(all_drafts.len(), 1);
-        let retrieved = all_drafts.get("thread-1");
-        assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().body, "Test message");
+        let retrieved = all_drafts.get("thread-1").expect("Expected to find a draft for thread-1");
+        assert_eq!(retrieved.body, "Test message");
     }
 
     #[test]

@@ -59,13 +59,12 @@ impl Default for TemplateExpander {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     fn create_expander(vars: Vec<(&str, &str)>) -> TemplateExpander {
-        let mut vars_map = HashMap::new();
-        for (k, v) in vars {
-            vars_map.insert(k.to_string(), v.to_string());
-        }
+        let vars_map = vars
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
         TemplateExpander { vars: vars_map }
     }
 
