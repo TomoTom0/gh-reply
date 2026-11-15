@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[command(name = "gh-reply")]
+#[command(name = "gh-reply", version)]
 #[command(about = "CLI to manage draft replies to GitHub PR review comments", long_about = None)]
 pub struct Cli {
     /// Repository to use (format: owner/repo)
