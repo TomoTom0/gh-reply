@@ -1,14 +1,15 @@
 # Release tooling for gh-reply.
 #
 # `mise run release` is the official release path: it tags the current HEAD
-# (annotated tag), runs the test suite, builds the linux-amd64 release asset
-# and creates (or updates) the GitHub release with that asset.
+# (annotated tag), runs the test suite, pushes the tag only after the tests
+# pass, builds the linux-amd64 release asset and creates (or updates) the
+# GitHub release with that asset.
 #
 # Note: this environment cannot cross-compile for darwin/windows, so releases
 # made through this task carry the linux-amd64 asset only.
 
 [tasks.release]
-description = "Tag HEAD, run tests, build the linux-amd64 asset and create/update the GitHub release"
+description = "Tag HEAD, run tests, push the tag, build the linux-amd64 asset and create/update the GitHub release"
 env = { GH_REPLY_RELEASE_TARGET = "x86_64-unknown-linux-gnu", GH_REPLY_RELEASE_ASSET_NAME = "gh-reply-linux-amd64" }
 run = """
 #!/usr/bin/env bash
@@ -40,16 +41,19 @@ if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
     fi
     echo "==> tag ${tag} already exists and matches HEAD"
 else
-    echo "==> creating annotated tag ${tag} at HEAD and pushing it"
+    echo "==> creating annotated tag ${tag} at HEAD (the tag is pushed only after the tests pass)"
     git tag -a "${tag}" -m "Release ${tag}"
-    git push origin "${tag}"
 fi
 
-# --- c. Tests must pass ---
+# --- c. Tests must pass before the tag is pushed ---
 echo "==> cargo test"
 cargo test
 
-# --- d. Build the host (linux-amd64) release binary and verify its version ---
+# --- d. Push the tag; idempotent, so both the fresh-tag and retry paths push it ---
+echo "==> pushing tag ${tag} to origin"
+git push origin "${tag}"
+
+# --- e. Build the host (linux-amd64) release binary and verify its version ---
 echo "==> cargo build --release --target ${target}"
 cargo build --release --target "${target}"
 
@@ -66,7 +70,7 @@ case "${built_version}" in
     *) echo "ERROR: ${asset_name} --version reported '${built_version}', expected it to contain ${version}" >&2; exit 1 ;;
 esac
 
-# --- e. Create the release, or overwrite the asset if the release exists ---
+# --- f. Create the release, or overwrite the asset if the release exists ---
 notes="${asset_dir}/release-notes-${tag}.md"
 cat >"${notes}" <<EOF
 gh-reply ${version}
@@ -85,7 +89,7 @@ if gh release view "${tag}" >/dev/null 2>&1; then
     gh release upload "${tag}" "${asset}" --clobber
 else
     echo "==> creating release ${tag} with asset ${asset_name}"
-    gh release create "${tag}" "${asset}" --title "${tag}" --notes-file "${notes}"
+    gh release create "${tag}" "${asset}" --title "${tag}" --notes-file "${notes}" --verify-tag
 fi
 
 echo "==> release ${tag} is up to date:"
