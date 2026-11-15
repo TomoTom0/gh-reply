@@ -1,0 +1,93 @@
+# Release tooling for gh-reply.
+#
+# `mise run release` is the official release path: it tags the current HEAD
+# (annotated tag), runs the test suite, builds the linux-amd64 release asset
+# and creates (or updates) the GitHub release with that asset.
+#
+# Note: this environment cannot cross-compile for darwin/windows, so releases
+# made through this task carry the linux-amd64 asset only.
+
+[tasks.release]
+description = "Tag HEAD, run tests, build the linux-amd64 asset and create/update the GitHub release"
+env = { GH_REPLY_RELEASE_TARGET = "x86_64-unknown-linux-gnu", GH_REPLY_RELEASE_ASSET_NAME = "gh-reply-linux-amd64" }
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+target="${GH_REPLY_RELEASE_TARGET}"
+asset_name="${GH_REPLY_RELEASE_ASSET_NAME}"
+
+# --- a. Resolve the version from cargo metadata (explicitly the gh-reply package) ---
+command -v jq >/dev/null 2>&1 || { echo "ERROR: jq is required for this task" >&2; exit 1; }
+command -v gh >/dev/null 2>&1 || { echo "ERROR: gh is required for this task" >&2; exit 1; }
+
+version="$(cargo metadata --format-version 1 --no-deps | jq -er '.packages[] | select(.name == "gh-reply") | .version')"
+tag="v${version}"
+echo "==> releasing gh-reply ${version} (tag: ${tag})"
+
+# --- b. Require a clean tree; the tag must either not exist or point at HEAD ---
+if [ -n "$(git status --porcelain)" ]; then
+    echo "ERROR: working tree is not clean:" >&2
+    git status --porcelain >&2
+    exit 1
+fi
+if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+    tag_commit="$(git rev-parse "${tag}^{commit}")"
+    head_commit="$(git rev-parse HEAD)"
+    if [ "${tag_commit}" != "${head_commit}" ]; then
+        echo "ERROR: tag ${tag} points at ${tag_commit} but HEAD is ${head_commit}" >&2
+        exit 1
+    fi
+    echo "==> tag ${tag} already exists and matches HEAD"
+else
+    echo "==> creating annotated tag ${tag} at HEAD and pushing it"
+    git tag -a "${tag}" -m "Release ${tag}"
+    git push origin "${tag}"
+fi
+
+# --- c. Tests must pass ---
+echo "==> cargo test"
+cargo test
+
+# --- d. Build the host (linux-amd64) release binary and verify its version ---
+echo "==> cargo build --release --target ${target}"
+cargo build --release --target "${target}"
+
+asset_dir="target/release-assets"
+mkdir -p "${asset_dir}"
+asset="${asset_dir}/${asset_name}"
+cp "target/${target}/release/gh-reply" "${asset}"
+chmod +x "${asset}"
+
+built_version="$("${asset}" --version)"
+echo "==> asset ${asset}: ${built_version}"
+case "${built_version}" in
+    *"${version}"*) ;;
+    *) echo "ERROR: ${asset_name} --version reported '${built_version}', expected it to contain ${version}" >&2; exit 1 ;;
+esac
+
+# --- e. Create the release, or overwrite the asset if the release exists ---
+notes="${asset_dir}/release-notes-${tag}.md"
+cat >"${notes}" <<EOF
+gh-reply ${version}
+
+Release created manually via "mise run release" (see mise.toml).
+
+## Notes
+
+- This release ships the linux-amd64 asset only: the release environment
+  cannot cross-compile darwin/windows binaries, so those assets are not
+  attached this time.
+EOF
+
+if gh release view "${tag}" >/dev/null 2>&1; then
+    echo "==> release ${tag} already exists; overwriting asset ${asset_name}"
+    gh release upload "${tag}" "${asset}" --clobber
+else
+    echo "==> creating release ${tag} with asset ${asset_name}"
+    gh release create "${tag}" "${asset}" --title "${tag}" --notes-file "${notes}"
+fi
+
+echo "==> release ${tag} is up to date:"
+gh release view "${tag}" --json name,tagName,assets --jq '{name: .name, tag: .tagName, assets: [.assets[].name]}'
+"""
