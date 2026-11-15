@@ -2,6 +2,7 @@
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 fn setup_test_env() {
     // Set GH_COMMAND to point to our mock script
@@ -21,6 +22,14 @@ fn cleanup_draft_store() {
         fs::remove_file(&draft_path).ok();
     }
 }
+
+// The draft tests below all remove, write and read the single on-disk draft
+// store (.git/info/gh-reply-drafts.json). cargo test runs tests in parallel
+// by default, and interleaved remove/write/read access to that one file makes
+// DraftStore::load() fail intermittently (the file is deleted between the
+// exists() check and read_to_string, or a just-truncated file is parsed as
+// empty JSON). Serialize these tests so each one owns the store exclusively.
+static DRAFT_STORE_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(test)]
 mod list_command_tests {
@@ -104,6 +113,7 @@ mod draft_command_tests {
 
     #[tokio::test]
     async fn test_draft_add_and_show() {
+        let _store_guard = DRAFT_STORE_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         setup_test_env();
         cleanup_draft_store();
         let client = GhClient::new(None);
@@ -121,6 +131,7 @@ mod draft_command_tests {
 
     #[tokio::test]
     async fn test_draft_clear() {
+        let _store_guard = DRAFT_STORE_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         setup_test_env();
         cleanup_draft_store();
         let client = GhClient::new(None);
@@ -137,6 +148,7 @@ mod draft_command_tests {
 
     #[tokio::test]
     async fn test_draft_send_dry_run() {
+        let _store_guard = DRAFT_STORE_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         setup_test_env();
         cleanup_draft_store();
         let client = GhClient::new(None);
