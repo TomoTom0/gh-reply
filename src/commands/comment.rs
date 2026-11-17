@@ -163,19 +163,42 @@ pub async fn reply(
         eprintln!("Thread: {}", thread_id);
         eprintln!("Message: {}", expanded_message);
         if resolve {
-            eprintln!("Would resolve thread");
+            if thread_id == "main" {
+                eprintln!("Skipping resolve: main is a PR-level comment, not a review thread");
+            } else {
+                eprintln!("Would resolve thread");
+            }
         }
         return Ok(());
     }
 
     // Post the reply
-    client.post_reply(&thread_id, &expanded_message).await?;
+    let mut sent = true;
+    if thread_id == "main" {
+        // PR-level comment on the main conversation (no thread to reply to)
+        if expanded_message.is_empty() {
+            eprintln!("Skipping empty comment for main (PR-level comment)");
+            sent = false;
+        } else {
+            client.post_pr_comment(pr_number, &expanded_message)?;
+        }
+    } else {
+        client.post_reply(&thread_id, &expanded_message).await?;
+    }
 
     // Resolve thread if requested
     if resolve {
-        client.resolve_thread(&thread_id).await?;
+        if thread_id == "main" {
+            eprintln!("Skipping resolve: main is a PR-level comment, not a review thread");
+        } else {
+            client.resolve_thread(&thread_id).await?;
+        }
     }
 
-    eprintln!("Reply posted successfully");
+    if sent {
+        eprintln!("Reply posted successfully");
+    } else {
+        eprintln!("Nothing sent");
+    }
     Ok(())
 }

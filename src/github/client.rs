@@ -369,6 +369,23 @@ impl GhClient {
         Ok(result)
     }
 
+    /// Post a PR-level comment on the main conversation
+    pub fn post_pr_comment(&self, pr_number: u32, body: &str) -> Result<()> {
+        let pr_arg = pr_number.to_string();
+        let mut args = vec!["pr", "comment", &pr_arg, "--body", body];
+
+        let repo_arg;
+        if let Some(repo) = &self.repo {
+            repo_arg = repo.clone();
+            args.push("--repo");
+            args.push(&repo_arg);
+        }
+
+        self.gh_exec(&args, None)?;
+        eprintln!("Comment posted to PR #{}", pr_number);
+        Ok(())
+    }
+
     /// Post a reply to a review thread
     pub async fn post_reply(
         &self,

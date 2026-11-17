@@ -176,8 +176,8 @@ Notes
   - GraphQL Node IDs (base64, e.g., `PRRT_kwDOQY1Lo85irSuR`) - use `comment list` to get them
   - 1-based index numbers (e.g., `1`, `2`, `3`) - corresponds to the order in `comment list` output (includes resolved threads)
 - `comment reply` immediately sends the reply to the specified thread.
-- `comment draft <prNumber> <threadId|index> <body>` saves a draft locally; use `comment draft <prNumber> --send` to send all saved drafts.
-- Both reply methods will `resolveReviewThread` when `--resolve` or `-r` is specified.
+- `comment draft <prNumber> <threadId|index|main> <body>` saves a draft locally; use `comment draft <prNumber> --send` to send all saved drafts.
+- Both reply methods will `resolveReviewThread` when `--resolve` or `-r` is specified. Note that `main` (PR-level comment) is not a review thread, so resolution is skipped with a message even if `-r` is given.
 
 返信（レビューコメントへの直接返信）
 ---------------------------------
@@ -189,13 +189,13 @@ Notes
 - `gh-reply comment list <prNumber>` — PR のスレッドを一覧表示します。出力される `id` は GraphQL の Node ID（例: `PRRT_kw...`）です。
 - `gh-reply comment reply <prNumber> <threadId|index|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に即座に返信します。
   - `<threadId|index|main>` には、Thread ID、1から始まるインデックス番号、または `main` を指定できます
-  - `-r` を付けるとスレッドを「解決（resolve）」します
+  - `-r` を付けるとスレッドを「解決（resolve）」します。ただし `main`（PR本筋コメント）はレビュースレッドではないため、`-r` を付けても resolve はスキップされ、その旨が stderr に表示されます
 
 ### 下書きを使う場合
 
 - `gh-reply comment draft <prNumber> <threadId|index|main> <body> [-r|--resolve]` — 指定スレッド（または `main`）に対する下書きを保存します。
   - `<threadId|index|main>` には、Thread ID、1から始まるインデックス番号、または `main` を指定できます
-  - `-r` を付けると送信後にそのスレッドを「解決（resolve）」します
+  - `-r` を付けると送信後にそのスレッドを「解決（resolve）」します。ただし `main`（PR本筋コメント）はレビュースレッドではないため、`-r` を付けても resolve はスキップされ、その旨が stderr に表示されます
 - `gh-reply comment draft <prNumber> --show` — 下書きを確認します。
 - `gh-reply comment draft <prNumber> --send [-f|--force] [--dry-run]` — 保存済みの全下書きを送信します。`-f` は本文が空でも強制的に解決を行います。
 - `gh-reply comment draft <prNumber> --clear` — 全下書きをクリアします。
