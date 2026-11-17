@@ -74,7 +74,11 @@ pub async fn send(client: &GhClient, pr_number: u32, force: bool, dry_run: bool)
         for (thread_id, draft) in &drafts {
             eprintln!("  Thread {}: {}", thread_id, draft.body);
             if draft.resolve.unwrap_or(false) {
-                eprintln!("    (would resolve)");
+                if thread_id == "main" {
+                    eprintln!("    (resolve skipped: main is a PR-level comment, not a review thread)");
+                } else {
+                    eprintln!("    (would resolve)");
+                }
             }
         }
         return Ok(());
@@ -108,11 +112,24 @@ pub async fn send(client: &GhClient, pr_number: u32, force: bool, dry_run: bool)
         let expanded_message = expander.expand(&draft.body)?;
 
         // Post the reply
-        client.post_reply(&thread_id, &expanded_message).await?;
+        if thread_id == "main" {
+            // PR-level comment on the main conversation (no thread to reply to)
+            if expanded_message.is_empty() {
+                eprintln!("Skipping empty comment for main (PR-level comment)");
+            } else {
+                client.post_pr_comment(pr_number, &expanded_message)?;
+            }
+        } else {
+            client.post_reply(&thread_id, &expanded_message).await?;
+        }
 
         // Resolve thread if requested in draft
         if draft.resolve.unwrap_or(false) {
-            client.resolve_thread(&thread_id).await?;
+            if thread_id == "main" {
+                eprintln!("Skipping resolve: main is a PR-level comment, not a review thread");
+            } else {
+                client.resolve_thread(&thread_id).await?;
+            }
         }
 
         // Remove draft from store and save immediately

@@ -2,6 +2,23 @@
 # Test mock for gh CLI
 # This script mimics gh CLI behavior for testing purposes
 
+# Record each invocation when GH_MOCK_LOG is set (used by integration tests).
+# One line per invocation, containing "$*" (the arguments).
+# GraphQL mutations pass their variables via stdin (`api graphql --input -`),
+# so for invocations containing `--input`, the stdin content is appended to
+# the same line (mutation names such as resolveReviewThread only appear in
+# the stdin payload). Invocations without `--input` must not read stdin
+# (gh_exec gives them a null stdin; `cat` runs only in the --input branch).
+if [ -n "$GH_MOCK_LOG" ]; then
+  log_line="$*"
+  case "$*" in
+    *--input*)
+      log_line="$log_line $(cat)"
+      ;;
+  esac
+  printf '%s\n' "$log_line" >> "$GH_MOCK_LOG"
+fi
+
 case "$1" in
   "--version")
     echo "gh version 2.0.0 (test mock)"
@@ -35,6 +52,10 @@ case "$1" in
       exit 0
     elif [ "$2" == "view" ]; then
       echo '{"title": "Test PR", "author": {"login": "testuser"}, "headRefName": "feature", "baseRefName": "main"}'
+      exit 0
+    elif [ "$2" == "comment" ]; then
+      # gh pr comment <PR> --body <MSG> [--repo owner/name]
+      echo "https://github.com/test-owner/test-repo/pull/$3#issuecomment-mock"
       exit 0
     fi
     ;;
